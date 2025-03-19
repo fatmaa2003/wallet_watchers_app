@@ -1,0 +1,43 @@
+# ----------------------------
+# Node.js Backend ignores
+# ----------------------------
+/backend/node_modules/
+/backend/.env
+/backend/logs
+/backend/*.log
+/backend/.DS_Store
+
+# Optional: MongoDB dump files
+/backend/dump/
+/backend/*.gz
+
+# ----------------------------
+# Flutter ignores
+# ----------------------------
+/flutter/.dart_tool/
+/flutter/.packages
+/flutter/.flutter-plugins
+/flutter/.flutter-plugins-dependencies
+/flutter/.idea/
+/flutter/.vscode/
+/flutter/build/
+/flutter/.DS_Store
+/flutter/pubspec.lock
+
+# Optional: Flutter generated files
+/flutter/ios/Pods/
+/flutter/ios/Flutter/Flutter.framework
+/flutter/ios/Flutter/Flutter.podspec
+/flutter/android/.gradle/
+/flutter/android/captures/
+/flutter/android/.idea/
+
+# ----------------------------
+# Global ignores (for both)
+# ----------------------------
+.DS_Store
+Thumbs.db
+*.log
+
+# Optional: macOS system files
+__MACOSX/
