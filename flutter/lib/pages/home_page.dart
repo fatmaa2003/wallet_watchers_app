@@ -1,5 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:wallet_watchers_app/models/transaction.dart';
 import 'package:wallet_watchers_app/nav/bottom_nav_bar.dart';
+import 'package:wallet_watchers_app/pages/add_transaction_page.dart';
+import 'package:wallet_watchers_app/pages/main_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -9,15 +13,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Map<String, dynamic>> transactions = [
-    {"title": "Salary", "date": "Aug 25, 2025", "amount": 3000.00, "isIncome": true},
-    {"title": "Rent", "date": "Aug 20, 2025", "amount": 1000.00, "isIncome": false},
-    {"title": "Groceries", "date": "Aug 18, 2025", "amount": 200.00, "isIncome": false},
-  ];
+  List<Transaction> transactions = [];
 
-  void removeTransaction(int index) {
+  void _addTransaction(Transaction transaction) {
     setState(() {
-      transactions.removeAt(index);
+      transactions.add(transaction);
     });
   }
 
@@ -25,92 +25,35 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Personal Income Manager"),
+        title: const Text("Personal Manager"),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Welcome Back!",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.blueAccent,
-                borderRadius: BorderRadius.circular(12),
+      bottomNavigationBar: const BottomNavBar(selectedIndex: 0),
+      floatingActionButton: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        child: FloatingActionButton(
+          onPressed: () async {
+            final transaction = await Navigator.push<Transaction>(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AddTransactionPage(),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Total Balance",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "\$5,000.00",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "Recent Transactions",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: transactions.isEmpty
-                  ? const Center(child: Text("No transactions yet"))
-                  : ListView.builder(
-                itemCount: transactions.length,
-                itemBuilder: (context, index) {
-                  final transaction = transactions[index];
-                  return Dismissible(
-                    key: Key(transaction["title"]),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      color: Colors.red,
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    onDismissed: (direction) {
-                      removeTransaction(index);
-                    },
-                    child: ListTile(
-                      leading: Icon(
-                        transaction["isIncome"] ? Icons.arrow_downward : Icons.arrow_upward,
-                        color: transaction["isIncome"] ? Colors.green : Colors.red,
-                      ),
-                      title: Text(transaction["title"]),
-                      subtitle: Text(transaction["date"]),
-                      trailing: Text(
-                        "${transaction["isIncome"] ? "+" : "-"}\$${transaction["amount"].toStringAsFixed(2)}",
-                        style: TextStyle(
-                          color: transaction["isIncome"] ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+            );
+            if (transaction != null) {
+              _addTransaction(transaction);
+            }
+          },
+          backgroundColor: Colors.blue[400],
+          elevation: 4,
+          shape: const CircleBorder(),
+          child: const Icon(
+            CupertinoIcons.add,
+            color: Colors.white,
+          ),
         ),
       ),
-      bottomNavigationBar: const BottomNavBar(selectedIndex: 0),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      body: MainScreen(transactions: transactions),
     );
   }
 }

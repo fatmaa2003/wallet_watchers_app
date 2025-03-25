@@ -1,0 +1,80 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:wallet_watchers_app/models/transaction.dart';
+
+class ApiService {
+  static const String baseUrl = 'http://localhost:3000/api';
+  bool _useMock = true; // Toggle this to switch between mock and real API
+  String? _userId;
+
+  // Set the current user ID
+  void setUserId(String userId) {
+    _userId = userId;
+  }
+
+  // Get the current user ID
+  String? get userId => _userId;
+
+  Future<Map<String, dynamic>> addTransaction(Transaction transaction) async {
+    if (_userId == null) {
+      throw Exception('User ID not set. Please authenticate first.');
+    }
+
+    if (_useMock) {
+      // Simulate network delay
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Simulate successful response
+      final mockResponse = {
+        'id': transaction.id,
+        'userId': _userId,
+        'amount': transaction.amount,
+        'description': transaction.description,
+        'date': transaction.date.toIso8601String(),
+        'type': transaction.type.toString().split('.').last,
+        'category': transaction.category.toString().split('.').last,
+        'createdAt': DateTime.now().toIso8601String(),
+      };
+
+      print('Mock API: Transaction added successfully');
+      print('Response: ${jsonEncode(mockResponse)}');
+      return mockResponse;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/transactions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer $_userId', // Add user ID in Authorization header
+        },
+        body: jsonEncode({
+          'userId': _userId,
+          'amount': transaction.amount,
+          'description': transaction.description,
+          'date': transaction.date.toIso8601String(),
+          'type': transaction.type.toString().split('.').last,
+          'category': transaction.category.toString().split('.').last,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        print('Transaction added successfully: ${response.body}');
+        return jsonDecode(response.body);
+      } else {
+        print('Error adding transaction: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        throw Exception('Failed to add transaction');
+      }
+    } catch (e) {
+      print('Exception while adding transaction: $e');
+      rethrow;
+    }
+  }
+
+  // Method to toggle between mock and real API
+  void toggleMock(bool useMock) {
+    _useMock = useMock;
+  }
+}
