@@ -15,6 +15,66 @@ class ApiService {
   // Get the current user ID
   String? get userId => _userId;
 
+  Future<Map<String, dynamic>> signup({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+    required String phoneNo,
+  }) async {
+    if (_useMock) {
+      // Simulate network delay
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Simulate successful response
+      final mockResponse = {
+        'message': 'User created successfully',
+        'user': {
+          'id': 'mock_user_id',
+          'firstName': firstName,
+          'lastName': lastName,
+          'email': email,
+          'phoneNo': phoneNo,
+        }
+      };
+
+      print('Mock API: User created successfully');
+      print('Response: ${jsonEncode(mockResponse)}');
+      return mockResponse;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/signup'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'firstName': firstName,
+          'lastName': lastName,
+          'email': email,
+          'password': password,
+          'phoneNo': phoneNo,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        print('User created successfully: ${response.body}');
+        final responseData = jsonDecode(response.body);
+        // Set the user ID after successful signup
+        setUserId(responseData['user']['id']);
+        return responseData;
+      } else {
+        print('Error creating user: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        throw Exception('Failed to create user');
+      }
+    } catch (e) {
+      print('Exception while creating user: $e');
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>> addTransaction(Transaction transaction) async {
     if (_userId == null) {
       throw Exception('User ID not set. Please authenticate first.');
