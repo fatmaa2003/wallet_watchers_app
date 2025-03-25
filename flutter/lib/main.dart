@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wallet_watchers_app/pages/home_page.dart';
+import 'package:wallet_watchers_app/pages/signup_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +17,11 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      initialRoute: '/signup',
+      routes: {
+        '/signup': (context) => const SignUpPage(),
+        '/home': (context) => const HomePage(),
+      },
     );
   }
 }
