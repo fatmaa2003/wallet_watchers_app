@@ -1,0 +1,26 @@
+const ExpensesService = require ("../services/expenses.service");
+
+const getAllExpenses = async (req,res) =>{
+
+    console.log("gettingAllExpenses");
+    const expenses = await ExpensesService.getAllExpenses();
+    res.status(200).json(expenses);
+
+}
+
+const postExpenses = async (req,res) =>{
+    const { expenseAmount, categoryName } = req.body;
+    console.log(expenseAmount , categoryName)
+    if (!expenseAmount || !categoryName) {
+        return res.status(400).json({ error: "Missing required fields" });
+
+    }
+
+    const expense = await ExpensesService.postExpenses({ expenseAmount, categoryName });
+    res.status(201).json(expense);
+}
+
+
+
+
+module.exports = { getAllExpenses, postExpenses };

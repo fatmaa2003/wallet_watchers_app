@@ -10,6 +10,9 @@ module.exports = (app) =>
     {
         app.use('/api/users', userRoute),
         app.use('/api/getAllCategories', categoriesRoute)
+        // app.use('/api/postExpenses', expensesRoute); 
+        app.use("/api/expenses", expensesRoute);
+
     }
 
 module.exports = app;

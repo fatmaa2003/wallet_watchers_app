@@ -1,4 +1,4 @@
-const CategoriesService = require("../services/categoreies.service");
+const CategoriesService = require("../services/categories.service");
 
 const getAllCategories = async (req, res) => {
   console.log("getting all categories");
