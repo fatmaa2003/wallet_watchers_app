@@ -4,10 +4,10 @@ const { Schema } = mongoose;
 
 const categoriesSchema = new Schema({
 
-    categoryId:{
-        type: Number,
-        default: 0,
-    },
+    // categoryId:{
+    //     type: Number,
+    //     default: 0,
+    // },
     categoryName:{
         type: String,
         default: 0
