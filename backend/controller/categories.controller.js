@@ -1,14 +1,11 @@
+const CategoriesService = require("../services/categoreies.service");
 
-const Category = require('../model/categories.model');
+const getAllCategories = async (req, res) => {
+  console.log("getting all categories");
+  const categories = await CategoriesService.getAllCategories();
+  res.status(200).json(categories);
+};
 
-//app.get bta3t drop down bta3t el categories, yecall api betget el categories kolaha.
-
-
-exports.getAllCategories = async (req, res) => {
-    try {
-        const categories = await Category.find();
-        res.status(200).json(categories);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
+module.exports = {
+  getAllCategories,
 };
