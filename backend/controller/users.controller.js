@@ -6,6 +6,40 @@ const bcrypt = require('bcrypt');
 // then fel list of expenses, ha add el expense de
 // el list gowaha el category id wel amount wel category name.
 
+const signin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Check if user exists
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid email or password' });
+        }
+
+        // Check password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid email or password' });
+        }
+
+        // Return user info (without password)
+        res.status(200).json({
+            message: 'Login successful',
+            user: {
+                id: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                phoneNo: user.phoneNo
+            }
+        });
+    } catch (error) {
+        console.error('Signin error:', error);
+        res.status(500).json({ message: 'Error signing in', error: error.message });
+    }
+};
+
+
 const signup = async (req, res) => {
     try {
         const { firstName, lastName, email, password, phoneNo } = req.body;
@@ -67,6 +101,7 @@ const addExpense = async (req, res) => {
 };
 
 module.exports = {
+    signin,
     signup,
     addExpense,
 };
