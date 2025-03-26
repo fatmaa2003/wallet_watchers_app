@@ -15,6 +15,60 @@ class ApiService {
   // Get the current user ID
   String? get userId => _userId;
 
+  Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
+    if (_useMock) {
+      // Simulate network delay
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Simulate successful response
+      final mockResponse = {
+        'message': 'Login successful',
+        'user': {
+          'id': 'mock_user_id',
+          'firstName': 'John',
+          'lastName': 'Doe',
+          'email': email,
+          'phoneNo': '1234567890',
+        }
+      };
+
+      print('Mock API: Login successful');
+      print('Response: ${jsonEncode(mockResponse)}');
+      return mockResponse;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/login'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Login successful: ${response.body}');
+        final responseData = jsonDecode(response.body);
+        // Set the user ID after successful login
+        setUserId(responseData['user']['id']);
+        return responseData;
+      } else {
+        print('Error during login: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        throw Exception('Failed to login');
+      }
+    } catch (e) {
+      print('Exception while logging in: $e');
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>> signup({
     required String firstName,
     required String lastName,
