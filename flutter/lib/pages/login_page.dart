@@ -2,31 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:wallet_watchers_app/services/api_service.dart';
 
-class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<SignUpPage> createState() => _SignUpPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> {
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _phoneController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
   final _apiService = ApiService();
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _phoneController.dispose();
     super.dispose();
   }
 
@@ -37,12 +31,9 @@ class _SignUpPageState extends State<SignUpPage> {
       });
 
       try {
-        await _apiService.signup(
-          firstName: _firstNameController.text,
-          lastName: _lastNameController.text,
+        await _apiService.login(
           email: _emailController.text,
           password: _passwordController.text,
-          phoneNo: _phoneController.text,
         );
 
         if (mounted) {
@@ -117,7 +108,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Create Account',
+                    'Welcome Back!',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -127,7 +118,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Join Wallet Watchers today!',
+                    'Sign in to continue',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey[600],
@@ -135,34 +126,6 @@ class _SignUpPageState extends State<SignUpPage> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 40),
-
-                  // First Name Field
-                  _buildTextField(
-                    controller: _firstNameController,
-                    label: 'First Name',
-                    icon: CupertinoIcons.person,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your first name';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Last Name Field
-                  _buildTextField(
-                    controller: _lastNameController,
-                    label: 'Last Name',
-                    icon: CupertinoIcons.person,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your last name';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
 
                   // Email Field
                   _buildTextField(
@@ -203,35 +166,32 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a password';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
+                        return 'Please enter your password';
                       }
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
-                  // Phone Number Field
-                  _buildTextField(
-                    controller: _phoneController,
-                    label: 'Phone Number',
-                    icon: CupertinoIcons.phone,
-                    keyboardType: TextInputType.phone,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your phone number';
-                      }
-                      if (value.length < 10) {
-                        return 'Please enter a valid phone number';
-                      }
-                      return null;
-                    },
+                  // Forgot Password Link
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        // TODO: Implement forgot password
+                      },
+                      child: Text(
+                        'Forgot Password?',
+                        style: TextStyle(
+                          color: Colors.blue[400],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
 
-                  // Sign Up Button
+                  // Login Button
                   ElevatedButton(
                     onPressed: _isLoading ? null : _submitForm,
                     style: ElevatedButton.styleFrom(
@@ -254,7 +214,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             ),
                           )
                         : const Text(
-                            'Sign Up',
+                            'Login',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -263,22 +223,22 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Login Link
+                  // Sign Up Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Already have an account? ',
+                        'Don\'t have an account? ',
                         style: TextStyle(
                           color: Colors.grey[600],
                         ),
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/login');
+                          Navigator.pushReplacementNamed(context, '/signup');
                         },
                         child: Text(
-                          'Login',
+                          'Sign Up',
                           style: TextStyle(
                             color: Colors.blue[400],
                             fontWeight: FontWeight.bold,
