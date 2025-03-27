@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 enum TransactionType { expense, income }
 
 enum TransactionCategory {
-  food,
-  transportation,
+  Gas,
+  Transportation,
   shopping,
   bills,
   entertainment,
@@ -31,9 +31,9 @@ class Transaction {
   Color get color => type == TransactionType.income ? Colors.green : Colors.red;
   IconData get icon {
     switch (category) {
-      case TransactionCategory.food:
+      case TransactionCategory.Gas:
         return Icons.restaurant;
-      case TransactionCategory.transportation:
+      case TransactionCategory.Transportation:
         return Icons.directions_car;
       case TransactionCategory.shopping:
         return Icons.shopping_cart;
@@ -44,5 +44,16 @@ class Transaction {
       case TransactionCategory.other:
         return Icons.category;
     }
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'amount': amount,
+      'description': description,
+      'date': date.toIso8601String(),
+      'type': type.toString().split('.').last,
+      'category': category.toString().split('.').last,
+    };
   }
 }

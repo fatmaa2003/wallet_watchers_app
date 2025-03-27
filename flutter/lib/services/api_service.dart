@@ -4,7 +4,7 @@ import 'package:wallet_watchers_app/models/transaction.dart';
 
 class ApiService {
   static const String baseUrl = 'http://localhost:3000/api';
-  bool _useMock = true; // Toggle this to switch between mock and real API
+  bool _useMock = false; // Toggle this to switch between mock and real API
   String? _userId;
 
   // Set the current user ID
@@ -152,24 +152,26 @@ class ApiService {
 
       print('Mock API: Transaction added successfully');
       print('Response: ${jsonEncode(mockResponse)}');
+
       return mockResponse;
     }
 
     try {
+      print(transaction);
       final response = await http.post(
-        Uri.parse('$baseUrl/transactions'),
+        Uri.parse('$baseUrl/expenses/postExpenses'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization':
-              'Bearer $_userId', // Add user ID in Authorization header
+              'Bearer $_userId', // TODO: Replace with proper JWT token
         },
         body: jsonEncode({
           'userId': _userId,
-          'amount': transaction.amount,
-          'description': transaction.description,
-          'date': transaction.date.toIso8601String(),
-          'type': transaction.type.toString().split('.').last,
-          'category': transaction.category.toString().split('.').last,
+          'expenseAmount': transaction.amount,
+          // 'description': transaction.description,
+          // 'date': transaction.date.toIso8601String(),
+          // 'type': transaction.type.toString().split('.').last,
+          'categoryName': transaction.category.toString().split('.').last,
         }),
       );
 
@@ -183,6 +185,7 @@ class ApiService {
       }
     } catch (e) {
       print('Exception while adding transaction: $e');
+      print('Transaction details: ${jsonEncode(transaction.toJson())}');
       rethrow;
     }
   }
