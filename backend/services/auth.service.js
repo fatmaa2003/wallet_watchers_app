@@ -35,11 +35,17 @@ const forgotPassword = async (email, newPassword) => {
         throw new Error('User not found');
     }
 
+    const isSame = await bcrypt.compare(newPassword, user.password);
+    if (isSame) {
+        throw new Error('New password must be different from the old password');
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
 
     return await user.save();
 };
+
 
 module.exports = {
     signup,
