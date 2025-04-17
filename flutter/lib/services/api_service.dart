@@ -1,29 +1,50 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:wallet_watchers_app/models/transaction.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:3000/api';
-  bool _useMock = true; // Toggle this to switch between mock and real API
-  String? _userId;
+  static const String baseUrl = 'http://192.168.1.8:3000/api';
+  bool _useMock = false;
+  String _userId = '';
 
-  // Set the current user ID
-  void setUserId(String userId) {
-    _userId = userId;
+  ApiService() {
+    _loadUserId(); // Auto-load userId on creation
   }
 
-  // Get the current user ID
-  String? get userId => _userId;
+  Future<void> _loadUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    _userId = prefs.getString('userId') ?? '';
+    print('Loaded userId: $_userId');
+  }
+
+  Future<void> _saveUserId(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userId', userId);
+    _userId = userId;
+    print('Saved userId: $_userId');
+  }
+
+  void setUserId(String userId) {
+    if (userId.isEmpty || userId == 'mock_user_id') {
+      throw Exception('Invalid user ID provided: $userId');
+    }
+    _saveUserId(userId);
+  }
+
+  String get userId => _userId;
+
+  void toggleMock(bool useMock) {
+    _useMock = useMock;
+    print('Mock mode: $_useMock');
+  }
 
   Future<Map<String, dynamic>> login({
     required String email,
     required String password,
   }) async {
     if (_useMock) {
-      // Simulate network delay
       await Future.delayed(const Duration(seconds: 1));
-
-      // Simulate successful response
       final mockResponse = {
         'message': 'Login successful',
         'user': {
@@ -32,40 +53,36 @@ class ApiService {
           'lastName': 'Doe',
           'email': email,
           'phoneNo': '1234567890',
-        }
+        },
       };
-
-      print('Mock API: Login successful');
-      print('Response: ${jsonEncode(mockResponse)}');
+      final user = mockResponse['user'] as Map<String, dynamic>?;
+      if (user == null || user['id'] == null) {
+        throw Exception('User ID missing in mock response');
+      }
+      await _saveUserId(user['id'] as String);
       return mockResponse;
     }
 
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/users/login'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
-      );
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      ).timeout(const Duration(seconds: 10));
 
+      final responseData = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        print('Login successful: ${response.body}');
-        final responseData = jsonDecode(response.body);
-        // Set the user ID after successful login
-        setUserId(responseData['user']['id']);
+        final userId = responseData['user']?['id'];
+        if (userId == null || userId.isEmpty) {
+          throw Exception('User ID missing in response');
+        }
+        await _saveUserId(userId);
         return responseData;
       } else {
-        print('Error during login: ${response.statusCode}');
-        print('Response body: ${response.body}');
-        throw Exception('Failed to login');
+        throw Exception('Login failed: ${response.statusCode}');
       }
     } catch (e) {
-      print('Exception while logging in: $e');
-      rethrow;
+      throw Exception('Login error: $e');
     }
   }
 
@@ -77,10 +94,7 @@ class ApiService {
     required String phoneNo,
   }) async {
     if (_useMock) {
-      // Simulate network delay
       await Future.delayed(const Duration(seconds: 1));
-
-      // Simulate successful response
       final mockResponse = {
         'message': 'User created successfully',
         'user': {
@@ -89,20 +103,20 @@ class ApiService {
           'lastName': lastName,
           'email': email,
           'phoneNo': phoneNo,
-        }
+        },
       };
-
-      print('Mock API: User created successfully');
-      print('Response: ${jsonEncode(mockResponse)}');
+      final user = mockResponse['user'] as Map<String, dynamic>?;
+      if (user == null || user['id'] == null) {
+        throw Exception('User ID missing in mock response');
+      }
+      await _saveUserId(user['id'] as String);
       return mockResponse;
     }
 
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/users/signup'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'firstName': firstName,
           'lastName': lastName,
@@ -110,35 +124,32 @@ class ApiService {
           'password': password,
           'phoneNo': phoneNo,
         }),
-      );
+      ).timeout(const Duration(seconds: 10));
 
+      final responseData = jsonDecode(response.body);
       if (response.statusCode == 201) {
-        print('User created successfully: ${response.body}');
-        final responseData = jsonDecode(response.body);
-        // Set the user ID after successful signup
-        setUserId(responseData['user']['id']);
+        final userId = responseData['user']?['id'];
+        if (userId == null || userId.isEmpty) {
+          throw Exception('User ID missing in response');
+        }
+        await _saveUserId(userId);
         return responseData;
       } else {
-        print('Error creating user: ${response.statusCode}');
-        print('Response body: ${response.body}');
-        throw Exception('Failed to create user');
+        throw Exception('Signup failed: ${response.statusCode}');
       }
     } catch (e) {
-      print('Exception while creating user: $e');
-      rethrow;
+      throw Exception('Signup error: $e');
     }
   }
 
   Future<Map<String, dynamic>> addTransaction(Transaction transaction) async {
-    if (_userId == null) {
-      throw Exception('User ID not set. Please authenticate first.');
+    if (_userId.isEmpty) await _loadUserId();
+    if (_userId.isEmpty) {
+      throw Exception('User ID not set. Please login first.');
     }
 
     if (_useMock) {
-      // Simulate network delay
       await Future.delayed(const Duration(seconds: 1));
-
-      // Simulate successful response
       final mockResponse = {
         'id': transaction.id,
         'userId': _userId,
@@ -149,9 +160,6 @@ class ApiService {
         'category': transaction.category.toString().split('.').last,
         'createdAt': DateTime.now().toIso8601String(),
       };
-
-      print('Mock API: Transaction added successfully');
-      print('Response: ${jsonEncode(mockResponse)}');
       return mockResponse;
     }
 
@@ -160,8 +168,7 @@ class ApiService {
         Uri.parse('$baseUrl/transactions'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization':
-              'Bearer $_userId', // Add user ID in Authorization header
+          'Authorization': 'Bearer $_userId',
         },
         body: jsonEncode({
           'userId': _userId,
@@ -171,24 +178,58 @@ class ApiService {
           'type': transaction.type.toString().split('.').last,
           'category': transaction.category.toString().split('.').last,
         }),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 201) {
-        print('Transaction added successfully: ${response.body}');
         return jsonDecode(response.body);
       } else {
-        print('Error adding transaction: ${response.statusCode}');
-        print('Response body: ${response.body}');
-        throw Exception('Failed to add transaction');
+        throw Exception('Transaction failed: ${response.statusCode}');
       }
     } catch (e) {
-      print('Exception while adding transaction: $e');
-      rethrow;
+      throw Exception('Error adding transaction: $e');
     }
   }
 
-  // Method to toggle between mock and real API
-  void toggleMock(bool useMock) {
-    _useMock = useMock;
+  Future<Map<String, dynamic>> saveReceipt(String text) async {
+    if (_userId.isEmpty) await _loadUserId();
+    if (_userId.isEmpty) {
+      throw Exception('User ID not set. Please login first.');
+    }
+
+    if (_useMock) {
+      await Future.delayed(const Duration(seconds: 1));
+      return {
+        'message': 'Receipt saved successfully',
+        'text': text,
+      };
+    }
+
+    try {
+      final payload = {
+        'userId': _userId,
+        'text': text,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+      print('Sending payload to /api/receipts: $payload'); // Debug print
+      final response = await http.post(
+        Uri.parse('$baseUrl/receipts'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_userId', // Added Authorization header
+        },
+        body: jsonEncode(payload),
+      ).timeout(const Duration(seconds: 10));
+
+      print('Response status: ${response.statusCode}'); // Debug print
+      print('Response body: ${response.body}'); // Debug print
+
+      if (response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to save receipt: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error saving receipt: $e');
+    }
   }
 }
