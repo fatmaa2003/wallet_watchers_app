@@ -5,8 +5,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static const String baseUrl = 'http://localhost:3000/api';
+<<<<<<< HEAD
   bool _useMock = false;
   String _userId = '';
+=======
+  bool _useMock = false; // Toggle this to switch between mock and real API
+  String? _userId;
+>>>>>>> f35ba88924d57479f527485d5509de6526c05fe0
 
   ApiService() {
     _loadUserId(); // Auto-load userId on creation
@@ -160,15 +165,21 @@ class ApiService {
         'category': transaction.category.toString().split('.').last,
         'createdAt': DateTime.now().toIso8601String(),
       };
+
+      print('Mock API: Transaction added successfully');
+      print('Response: ${jsonEncode(mockResponse)}');
+
       return mockResponse;
     }
 
     try {
+      print(transaction);
       final response = await http.post(
         Uri.parse('$baseUrl/expenses/postExpenses'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_userId',
+          'Authorization':
+              'Bearer $_userId', // TODO: Replace with proper JWT token
         },
         body: jsonEncode({
           'userId': _userId,
@@ -186,7 +197,9 @@ class ApiService {
         throw Exception('Transaction failed: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error adding transaction: $e');
+      print('Exception while adding transaction: $e');
+      print('Transaction details: ${jsonEncode(transaction.toJson())}');
+      rethrow;
     }
   }
 
