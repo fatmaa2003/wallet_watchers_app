@@ -4,7 +4,7 @@ import 'package:wallet_watchers_app/models/transaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.8:3000/api';
+  static const String baseUrl = 'http://localhost:3000/api';
   bool _useMock = false;
   String _userId = '';
 
@@ -65,11 +65,11 @@ class ApiService {
 
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users/login'),
+        Uri.parse('$baseUrl/users/postLogin'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       ).timeout(const Duration(seconds: 10));
-
+      print("response ${response.body}");
       final responseData = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final userId = responseData['user']?['id'];
@@ -165,18 +165,18 @@ class ApiService {
 
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/transactions'),
+        Uri.parse('$baseUrl/expenses/postExpenses'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $_userId',
         },
         body: jsonEncode({
           'userId': _userId,
-          'amount': transaction.amount,
-          'description': transaction.description,
-          'date': transaction.date.toIso8601String(),
-          'type': transaction.type.toString().split('.').last,
-          'category': transaction.category.toString().split('.').last,
+          'expenseAmount': transaction.amount,
+          // 'description': transaction.description,
+          // 'date': transaction.date.toIso8601String(),
+          // 'type': transaction.type.toString().split('.').last,
+          'categoryName': transaction.category.toString().split('.').last,
         }),
       ).timeout(const Duration(seconds: 10));
 

@@ -49,21 +49,23 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   }
 
   Future<void> _submitForm() async {
+       print("hasdhasd");
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
       try {
+     
         final transaction = Transaction(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
           amount: double.parse(_amountController.text),
           description: _descriptionController.text,
           date: _selectedDate,
           type: _selectedType,
           category: _selectedCategory,
         );
-
+        print(transaction);
         final response = await _apiService.addTransaction(transaction);
         print('Transaction added successfully: $response');
 
