@@ -12,6 +12,7 @@ module.exports = (app) =>
         app.use('/api/getAllCategories', categoriesRoute)
         // app.use('/api/postExpenses', expensesRoute); 
         app.use("/api/expenses", expensesRoute);
+        app.use("/api/receipts", receiptRoute);
 
     }
 

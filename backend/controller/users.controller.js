@@ -49,6 +49,20 @@ const login = async (req, res) => {
     }
 };
 
+const forgotPassword = async (req, res) => {
+    const { email, newPassword } = req.body;
+
+    try {
+        await authService.forgotPassword(email, newPassword);
+
+        res.status(200).json({ message: 'Password updated successfully' });
+
+    } catch (error) {
+        console.error('Error in forgotPassword:', error);
+        res.status(400).json({ message: error.message }); 
+    }
+};
+
 const addExpense = async (req, res) => {
     try {
         const { userId, amount, categoryId, categoryName } = req.body;
@@ -70,5 +84,6 @@ const addExpense = async (req, res) => {
 module.exports = {
     signup,
     login,
+    forgotPassword,
     addExpense,
 };

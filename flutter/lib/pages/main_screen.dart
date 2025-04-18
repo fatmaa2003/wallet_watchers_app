@@ -119,7 +119,7 @@ class MainScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color.fromARGB(255, 79, 161, 168)!,
+                    const Color.fromARGB(255, 79, 161, 168),
                     Colors.blue[600]!
                   ],
                   begin: Alignment.topLeft,

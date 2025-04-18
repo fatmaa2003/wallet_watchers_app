@@ -20,7 +20,28 @@ const createUser = async ({ firstName, lastName, email, password, phoneNo }) => 
     return await user.save();
 };
 
+const updatePassword = async (email, newPassword) => {
+    const user = await findUserByEmail(email);
+
+    if (!user) {
+        throw new Error('User not found');
+    }
+
+    const isSame = await bcrypt.compare(newPassword, user.password);
+    if (isSame) {
+        throw new Error('New password must be different from the old password');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    await user.save();
+    return user;
+};
+
+
 module.exports = {
     findUserByEmail,
     createUser,
+    updatePassword,
 };
