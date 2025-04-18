@@ -18,8 +18,10 @@ const postExpenses = async ({expenseAmount , categoryName}) => {
 
     console.log("in repo post expense", expenseAmount , categoryName);
     console.log(Categories)
-    const category = await Categories.findOne({ categoryName });
+    const category = await Categories.find();
+    console.log(category)
     if (!category) {
+     
       return console.log("category not found")
     }
     
@@ -29,7 +31,7 @@ const postExpenses = async ({expenseAmount , categoryName}) => {
     });
 
     await newExpense.save();
-  
+    return newExpense;
   } catch (err) {
     console.log("err", err);
   }

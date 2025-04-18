@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 enum TransactionType { expense, income }
 
 enum TransactionCategory {
-  Gas,
+  Food,
   Transportation,
   shopping,
   bills,
@@ -31,7 +31,7 @@ class Transaction {
   Color get color => type == TransactionType.income ? Colors.green : Colors.red;
   IconData get icon {
     switch (category) {
-      case TransactionCategory.Gas:
+      case TransactionCategory.Food:
         return Icons.restaurant;
       case TransactionCategory.Transportation:
         return Icons.directions_car;

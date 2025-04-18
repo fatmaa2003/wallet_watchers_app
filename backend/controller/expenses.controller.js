@@ -10,7 +10,7 @@ const getAllExpenses = async (req,res) =>{
 
 const postExpenses = async (req,res) =>{
     const { expenseAmount, categoryName } = req.body;
-    console.log(expenseAmount , categoryName)
+    console.log("post expenses", expenseAmount , categoryName)
     if (!expenseAmount || !categoryName) {
         return res.status(400).json({ error: "Missing required fields" });
 
