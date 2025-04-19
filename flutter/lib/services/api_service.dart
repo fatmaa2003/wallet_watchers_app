@@ -5,13 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static const String baseUrl = 'http://localhost:3000/api';
-<<<<<<< HEAD
   bool _useMock = false;
   String _userId = '';
-=======
-  bool _useMock = false; // Toggle this to switch between mock and real API
-  String? _userId;
->>>>>>> f35ba88924d57479f527485d5509de6526c05fe0
 
   ApiService() {
     _loadUserId(); // Auto-load userId on creation
