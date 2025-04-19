@@ -32,7 +32,7 @@ class ApiService {
     _saveUserId(userId);
   }
 
-  String get userId => _userId;
+  String get userId => _userId ?? '';
 
   void toggleMock(bool useMock) {
     _useMock = useMock;
@@ -65,7 +65,7 @@ class ApiService {
 
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users/login'),
+        Uri.parse('$baseUrl/users/postLogin'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       ).timeout(const Duration(seconds: 10));
@@ -143,22 +143,22 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> addTransaction(Transaction transaction) async {
-    if (_userId.isEmpty) await _loadUserId();
-    if (_userId.isEmpty) {
+    if (_userId!.isEmpty) await _loadUserId();
+    if (_userId!.isEmpty) {
       throw Exception('User ID not set. Please login first.');
     }
 
     if (_useMock) {
       await Future.delayed(const Duration(seconds: 1));
       final mockResponse = {
-        'id': transaction.id,
+        // 'id': transaction.id,
         'userId': _userId,
-        'amount': transaction.amount,
-        'description': transaction.description,
-        'date': transaction.date.toIso8601String(),
-        'type': transaction.type.toString().split('.').last,
-        'category': transaction.category.toString().split('.').last,
-        'createdAt': DateTime.now().toIso8601String(),
+        'expenseAmount': transaction.amount,
+        // 'description': transaction.description,
+        // 'date': transaction.date.toIso8601String(),
+        // 'type': transaction.type.toString().split('.').last,
+        'categoryName': transaction.category.toString().split('.').last,
+        // 'createdAt': DateTime.now().toIso8601String(),
       };
 
       print('Mock API: Transaction added successfully');
@@ -199,8 +199,8 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> saveReceipt(String text) async {
-    if (_userId.isEmpty) await _loadUserId();
-    if (_userId.isEmpty) {
+    if (_userId!.isEmpty) await _loadUserId();
+    if (_userId!.isEmpty) {
       throw Exception('User ID not set. Please login first.');
     }
 
