@@ -9,11 +9,13 @@ const bcrypt = require('bcrypt');
 
 const signup = async (req, res) => {
     try {
+        console.log("signing up", req.body);
         const { firstName, lastName, email, password, phoneNo } = req.body;
         const user = await authService.signup(firstName, lastName, email, password, phoneNo);
+        console.log("user22", user);
         res.status(201).json({ message: 'User created successfully', user });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(400).json({ message: "error in signup", error: error.message });
     }
 };
 

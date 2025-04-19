@@ -15,9 +15,12 @@ const createUser = async ({ firstName, lastName, email, password, phoneNo }) => 
         email,
         password: hashedPassword,
         phoneNo: parseInt(phoneNo),
+        expenses: [],
     });
-
-    return await user.save();
+    console.log("user41", user);
+    await user.save()
+    console.log("user4", user);
+    return user;
 };
 
 const updatePassword = async (email, newPassword) => {

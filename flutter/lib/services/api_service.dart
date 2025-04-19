@@ -125,10 +125,12 @@ class ApiService {
           'phoneNo': phoneNo,
         }),
       ).timeout(const Duration(seconds: 10));
-
+      print("response ${response.body}");
       final responseData = jsonDecode(response.body);
+      print("responseData ${responseData}");
       if (response.statusCode == 201) {
-        final userId = responseData['user']?['id'];
+        print("responseData ${responseData}");
+        final userId = responseData['user']?['_id'];
         if (userId == null || userId.isEmpty) {
           throw Exception('User ID missing in response');
         }

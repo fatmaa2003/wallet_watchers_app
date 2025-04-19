@@ -3,10 +3,13 @@ const bcrypt = require('bcrypt');
 
 const signup = async (firstName, lastName, email, password, phoneNo) => {
     const existingUser = await authrepository.findUserByEmail(email);
+    console.log("existingUser", existingUser);
     if (existingUser) {
         throw new Error('User already exists');
     }
-    return await authrepository.createUser({ firstName, lastName, email, password, phoneNo });
+    const user = await authrepository.createUser({ firstName, lastName, email, password, phoneNo });
+    console.log("usersignup", user);
+    return user;
 };
 
 const login = async (email, password) => {
