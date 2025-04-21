@@ -4,7 +4,7 @@ import 'package:wallet_watchers_app/models/transaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'http://192.168.1.8:3000/api';
   bool _useMock = false; // Toggle this to switch between mock and real API
   String? _userId;
 
@@ -64,11 +64,13 @@ class ApiService {
     }
 
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/users/postLogin'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/users/postLogin'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email, 'password': password}),
+          )
+          .timeout(const Duration(seconds: 10));
 
       final responseData = jsonDecode(response.body);
       if (response.statusCode == 200) {
@@ -114,17 +116,19 @@ class ApiService {
     }
 
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/users/signup'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'firstName': firstName,
-          'lastName': lastName,
-          'email': email,
-          'password': password,
-          'phoneNo': phoneNo,
-        }),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/users/signup'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'firstName': firstName,
+              'lastName': lastName,
+              'email': email,
+              'password': password,
+              'phoneNo': phoneNo,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
       print("response ${response.body}");
       final responseData = jsonDecode(response.body);
       print("responseData ${responseData}");
@@ -171,22 +175,23 @@ class ApiService {
 
     try {
       print(transaction);
-      final response = await http.post(
-        Uri.parse('$baseUrl/expenses/postExpenses'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization':
-              'Bearer $_userId', // TODO: Replace with proper JWT token
-        },
-        body: jsonEncode({
-          'userId': _userId,
-          'expenseAmount': transaction.amount,
-          // 'description': transaction.description,
-          // 'date': transaction.date.toIso8601String(),
-          // 'type': transaction.type.toString().split('.').last,
-          'categoryName': transaction.category.toString().split('.').last,
-        }),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/expenses/postExpenses'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $_userId',
+            },
+            body: jsonEncode({
+              'userId': _userId,
+              'expenseAmount': transaction.amount,
+              // 'description': transaction.description,
+              // 'date': transaction.date.toIso8601String(),
+              // 'type': transaction.type.toString().split('.').last,
+              'categoryName': transaction.category.toString().split('.').last,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 201) {
         return jsonDecode(response.body);
@@ -201,9 +206,14 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> saveReceipt(String text) async {
-    if (_userId!.isEmpty) await _loadUserId();
-    if (_userId!.isEmpty) {
-      throw Exception('User ID not set. Please login first.');
+    if (_userId == null || _userId!.isEmpty) {
+      await _loadUserId();
+      if (_userId == null || _userId!.isEmpty) {
+        throw Exception('User ID not set. Please log in first.');
+      }
+    }
+    if (text.trim().isEmpty) {
+      throw Exception('Receipt text cannot be empty.');
     }
 
     if (_useMock) {
@@ -217,29 +227,33 @@ class ApiService {
     try {
       final payload = {
         'userId': _userId,
-        'text': text,
+        'text': text.trim(),
         'timestamp': DateTime.now().toIso8601String(),
       };
-      print('Sending payload to /api/receipts: $payload'); // Debug print
-      final response = await http.post(
-        Uri.parse('$baseUrl/receipts'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_userId', // Added Authorization header
-        },
-        body: jsonEncode(payload),
-      ).timeout(const Duration(seconds: 10));
+      print('Saving receipt with payload: $payload');
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/receipts'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $_userId',
+            },
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 10));
 
-      print('Response status: ${response.statusCode}'); // Debug print
-      print('Response body: ${response.body}'); // Debug print
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 201) {
         return jsonDecode(response.body);
       } else {
-        throw Exception('Failed to save receipt: ${response.statusCode}');
+        throw Exception(
+            'Failed to save receipt: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      throw Exception('Error saving receipt: $e');
+      print('Error saving receipt: $e');
+      rethrow;
     }
   }
 }

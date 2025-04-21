@@ -1,10 +1,19 @@
-const ReceiptRepository = require('../repository/receipt.repository');
+const Receipt = require('../model/receipt.model');
 
-const saveReceipt = async (userId, text, timestamp) => {
-  if (!userId || !text) {
-    throw new Error('Missing required fields');
+const saveReceipt = async ({ userId, text, timestamp }) => {
+  try {
+    const receipt = new Receipt({
+      userId,
+      text,
+      timestamp: timestamp ? new Date(timestamp) : undefined,
+    });
+    const savedReceipt = await receipt.save();
+    console.log('Receipt saved:', savedReceipt); // Debug log
+    return savedReceipt;
+  } catch (err) {
+    console.error('Error saving receipt:', err);
+    throw err;
   }
-  return await ReceiptRepository.saveReceipt({ userId, text, timestamp });
 };
 
 module.exports = {
