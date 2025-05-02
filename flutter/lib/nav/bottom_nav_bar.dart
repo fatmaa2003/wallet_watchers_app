@@ -3,6 +3,7 @@ import 'package:wallet_watchers_app/pages/home_page.dart';
 import 'package:wallet_watchers_app/pages/statistics_page.dart';
 import 'package:wallet_watchers_app/pages/profile_page.dart';
 import 'package:wallet_watchers_app/pages/ReceiptScanPage.dart';
+import 'package:wallet_watchers_app/pages/goals_page.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -21,10 +22,13 @@ class BottomNavBar extends StatelessWidget {
         page = const StatisticsPage();
         break;
       case 2:
-        page = const ProfilePage();
+        page = const GoalsPage();
         break;
       case 3:
         page = const ReceiptScanPage();
+        break;
+      case 4:
+        page = const ProfilePage();
         break;
       default:
         return;
@@ -46,9 +50,12 @@ class BottomNavBar extends StatelessWidget {
       unselectedItemColor: Colors.grey,
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-        BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Statistics"),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart), label: "Statistics"),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.flag), label: "Goals"), // 👈 Label for Goals
         BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: "Scan"),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
       ],
     );
   }

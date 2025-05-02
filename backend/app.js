@@ -13,6 +13,7 @@ module.exports = (app) =>
         // app.use('/api/postExpenses', expensesRoute); 
         app.use("/api/expenses", expensesRoute);
         app.use("/api/receipts", receiptRoute);
+        app.use('/api/goals', goalRoutes);
 
     }
 
