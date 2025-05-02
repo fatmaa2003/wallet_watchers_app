@@ -256,4 +256,20 @@ class ApiService {
       rethrow;
     }
   }
+
+  Future<void> saveWebChatUserId(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final webChatId = 'user_${DateTime.now().millisecondsSinceEpoch}_$userId';
+    await prefs.setString('webChatUserId', webChatId);
+  }
+
+  Future<String> getWebChatUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('webChatUserId') ?? 'guest';
+  }
+
+  Future<void> clearWebChatUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('webChatUserId');
+  }
 }

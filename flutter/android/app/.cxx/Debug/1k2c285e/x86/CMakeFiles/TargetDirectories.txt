@@ -1,0 +1,2 @@
+C:/APP Grad/wallet_watchers_app/flutter/android/app/.cxx/Debug/1k2c285e/x86/CMakeFiles/edit_cache.dir
+C:/APP Grad/wallet_watchers_app/flutter/android/app/.cxx/Debug/1k2c285e/x86/CMakeFiles/rebuild_cache.dir
