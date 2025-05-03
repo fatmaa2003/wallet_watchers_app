@@ -109,10 +109,15 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      CupertinoIcons.person_fill,
-                      color: Colors.white,
-                      size: 40,
+                    child: Center(
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/logo/app_logo.png',
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),

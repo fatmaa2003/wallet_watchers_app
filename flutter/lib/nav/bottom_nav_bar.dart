@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wallet_watchers_app/pages/home_page.dart';
 import 'package:wallet_watchers_app/pages/statistics_page.dart';
-import 'package:wallet_watchers_app/pages/profile_page.dart';
-import 'package:wallet_watchers_app/pages/ReceiptScanPage.dart';
-import 'package:wallet_watchers_app/pages/goals_page.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -21,15 +18,6 @@ class BottomNavBar extends StatelessWidget {
       case 1:
         page = const StatisticsPage();
         break;
-      case 2:
-        page = const GoalsPage();
-        break;
-      case 3:
-        page = const ReceiptScanPage();
-        break;
-      case 4:
-        page = const ProfilePage();
-        break;
       default:
         return;
     }
@@ -42,21 +30,70 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: selectedIndex,
-      onTap: (index) => _onItemTapped(context, index),
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: Colors.blue[600],
-      unselectedItemColor: Colors.grey,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart), label: "Statistics"),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.flag), label: "Goals"), // 👈 Label for Goals
-        BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: "Scan"),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-      ],
+    List<IconData> icons = [
+      Icons.home_outlined,
+      Icons.bar_chart_outlined,
+    ];
+
+    List<String> labels = ['Home', 'Statistics'];
+
+    return Container(
+      height: 65, // Reduced height
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(icons.length, (index) {
+          final isSelected = selectedIndex == index;
+
+          return GestureDetector(
+            onTap: () => _onItemTapped(context, index),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  padding: const EdgeInsets.all(4), // Smaller padding
+                  decoration: isSelected
+                      ? BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.blue.shade100,
+                        )
+                      : null,
+                  child: Icon(
+                    icons[index],
+                    size: 24, // Slightly smaller icon
+                    color: isSelected ? Colors.blue : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 2), // Less spacing
+                Text(
+                  labels[index],
+                  style: TextStyle(
+                    color: isSelected ? Colors.blue : Colors.grey,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
     );
   }
 }

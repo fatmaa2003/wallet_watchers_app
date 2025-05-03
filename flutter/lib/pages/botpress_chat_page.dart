@@ -48,7 +48,7 @@ class _BotpressChatPageState extends State<BotpressChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Wallet Chat Assistant')),
+      appBar: AppBar(title: const Text('Little Watcher Chat')),
       body: _chatUrl == null
           ? const Center(child: CircularProgressIndicator())
           : WebViewWidget(controller: _controller),
