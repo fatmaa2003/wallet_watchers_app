@@ -37,6 +37,7 @@ dependencies:
   google_mlkit_text_recognition: ^0.15.0
   google_mlkit_smart_reply: ^0.13.0
   shared_preferences: ^2.0.15
+  webview_flutter: ^4.2.2
 
 
 

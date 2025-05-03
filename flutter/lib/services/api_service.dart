@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:wallet_watchers_app/models/transaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wallet_watchers_app/models/goal.dart';
 
 class ApiService {
   static const String baseUrl = 'http://192.168.1.8:3000/api';
@@ -255,5 +256,75 @@ class ApiService {
       print('Error saving receipt: $e');
       rethrow;
     }
+  }
+
+  Future<void> saveWebChatUserId(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final webChatId = 'user_${DateTime.now().millisecondsSinceEpoch}_$userId';
+    await prefs.setString('webChatUserId', webChatId);
+  }
+
+  Future<String> getWebChatUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('webChatUserId') ?? 'guest';
+  }
+
+  Future<void> clearWebChatUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('webChatUserId');
+  }
+
+  Future<List<Goal>> fetchGoals() async {
+    if (_userId == null || _userId!.isEmpty) await _loadUserId();
+
+    final response = await http.get(Uri.parse('$baseUrl/goals/$_userId'));
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((json) => Goal.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load goals');
+    }
+  }
+
+  Future<Goal> createGoal(Goal goal) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/goals/create'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        ...goal.toJson(),
+        'userId': _userId,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      return Goal.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to create goal');
+    }
+  }
+
+  Future<Goal> updateGoal(Goal goal) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/goals/${goal.id}'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(goal.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return Goal.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to update goal');
+    }
+  }
+
+  Future<void> deleteGoal(String goalId) async {
+    final response = await http.delete(Uri.parse('$baseUrl/goals/$goalId'));
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete goal');
+    }
+  }
+
+  Future<Goal> toggleGoalAchieved(Goal goal) async {
+    return await updateGoal(goal.copyWith(isAchieved: !goal.isAchieved));
   }
 }
