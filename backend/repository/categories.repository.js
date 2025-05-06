@@ -8,6 +8,7 @@ const getAllCategories = async () => {
   } catch (err) {}
 };
 
+
 module.exports = {
   getAllCategories,
 };

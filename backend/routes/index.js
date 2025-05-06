@@ -3,6 +3,7 @@ const categoriesRoute = require("./categories.routes");
 const expensesRoute = require("./expenses.routes");
 const receiptRoute = require("./receipts.routes");
 const goalRoutes = require('./goals.routes');
+const profileRoutes = require('./profile.routes');
 
 module.exports = (app) => {
   app.use("/api/users", userRoute);
@@ -10,4 +11,5 @@ module.exports = (app) => {
   app.use("/api/expenses", expensesRoute);
   app.use("/api/receipts", receiptRoute);
   app.use('/api/goals', goalRoutes);
+  app.use('/api/profile', profileRoutes)
 };
