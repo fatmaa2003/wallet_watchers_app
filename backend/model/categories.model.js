@@ -1,13 +1,14 @@
 const mongoose = require ('mongoose');
+//const userModel = require ('./user.model');
 
 const { Schema } = mongoose;
 
 const categoriesSchema = new Schema({
 
-    // categoryId:{
-    //     type: Number,
-    //     default: 0,
-    // },
+    // userId:{
+    //         type: mongoose.Schema.Types.ObjectId,
+    //         ref: 'userModel',
+    //     },
     categoryName:{
         type: String,
         default: 0
