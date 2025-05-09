@@ -1,8 +1,8 @@
 const IncomeRepoistory = require("../repository/income.repository");
 
-const getIncome = async ({ userId }) => {
+const getIncome = async (userId) => {
   console.log(" in service get income", userId);
-  const incomeInfo = await IncomeRepoistory.getIncome({ userId });
+  const incomeInfo = await IncomeRepoistory.getIncome(userId);
   return incomeInfo;
 };
 

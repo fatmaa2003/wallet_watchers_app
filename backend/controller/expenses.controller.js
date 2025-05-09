@@ -1,26 +1,38 @@
-const ExpensesService = require ("../services/expenses.service");
+const ExpensesService = require("../services/expenses.service");
 
-const getAllExpenses = async (req,res) =>{
+const postAllExpenses = async (req, res) => {
+  console.log("fetching expenses for user");
+  const userId = req.body.userId;
 
-    console.log("gettingAllExpenses");
-    const expenses = await ExpensesService.getAllExpenses();
-    res.status(200).json(expenses);
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
 
-}
+  const expenses = await ExpensesService.postAllExpenses(userId);
+  res.status(200).json(expenses);
+};
 
-const postExpenses = async (req,res) =>{
-    const { expenseAmount, categoryName } = req.body;
-    console.log("post expenses", expenseAmount , categoryName)
-    if (!expenseAmount || !categoryName) {
-        return res.status(400).json({ error: "Missing required fields" });
+const postExpenses = async (req, res) => {
+  const { userId, expenseAmount, categoryName } = req.body;
 
-    }
+  console.log(
+    "in controller post expenses",
+    userId,
+    expenseAmount,
+    categoryName
+  );
 
-    const expense = await ExpensesService.postExpenses({ expenseAmount, categoryName });
-    res.status(201).json(expense);
-}
+  if (!userId || !expenseAmount || !categoryName) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
 
+  const expense = await ExpensesService.postExpenses({
+    userId,
+    expenseAmount,
+    categoryName,
+  });
 
+  res.status(201).json(expense);
+};
 
-
-module.exports = { getAllExpenses, postExpenses };
+module.exports = { postAllExpenses, postExpenses };

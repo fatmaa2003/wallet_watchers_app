@@ -1,13 +1,24 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:wallet_watchers_app/models/transaction.dart';
+import 'package:wallet_watchers_app/models/user.dart';
 import 'package:wallet_watchers_app/pages/botpress_chat_page.dart';
 import 'package:wallet_watchers_app/menu/custom_menu.dart';
+import 'package:wallet_watchers_app/pages/add_expense_page.dart';
+import 'package:wallet_watchers_app/pages/add_income_page.dart';
+import 'package:wallet_watchers_app/services/api_service.dart';
 
 class MainScreen extends StatelessWidget {
   final List<Transaction> transactions;
+  final User user;
+  final Future<void> Function()? refreshTransactions;
 
-  const MainScreen({super.key, required this.transactions});
+  const MainScreen({
+    super.key,
+    required this.transactions,
+    required this.user,
+    this.refreshTransactions,
+  });
 
   double get totalBalance => transactions.fold(
       0,
@@ -22,11 +33,12 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final apiService = ApiService();
     return Scaffold(
-      endDrawer: const CustomMenu(),
+      endDrawer: CustomMenu(user: user),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
           child: Column(
             children: [
               // Header: User Info and Right Side Menu
@@ -34,47 +46,53 @@ class MainScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Left: User Info
-                  Row(
-                    children: [
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.blue[400]!, Colors.blue[600]!],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 45,
+                          height: 45,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.blue[400]!, Colors.blue[600]!],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
                           ),
-                          shape: BoxShape.circle,
+                          child: const Icon(CupertinoIcons.person_fill,
+                              color: Colors.white, size: 20),
                         ),
-                        child: const Icon(CupertinoIcons.person_fill,
-                            color: Colors.white),
-                      ),
-                      const SizedBox(width: 12),
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Hello!',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.grey)),
-                          Text('Hanan Soliman',
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87)),
-                        ],
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Hello!',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey)),
+                              Text(user.fullName,
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87),
+                                  overflow: TextOverflow.ellipsis),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
 
                   // Right: Message + Chatbot Icon + Menu Icon
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                            horizontal: 6, vertical: 6),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE8F1FA),
                           borderRadius: BorderRadius.circular(20),
@@ -87,11 +105,11 @@ class MainScreen extends StatelessWidget {
                           ],
                         ),
                         child: const Text(
-                          'Here is Your Little Watcher bot!',
-                          style: TextStyle(fontSize: 16, color: Colors.black87),
+                          'Wallet Bot',
+                          style: TextStyle(fontSize: 12, color: Colors.black87),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                       FloatingActionButton(
                         heroTag: 'chatBot',
                         tooltip: 'Open Wallet Bot',
@@ -106,12 +124,14 @@ class MainScreen extends StatelessWidget {
                           );
                         },
                         child: const Icon(Icons.smart_toy_outlined,
-                            color: Colors.white),
+                            color: Colors.white, size: 18),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 2),
                       Builder(
                         builder: (context) => IconButton(
-                          icon: const Icon(Icons.menu, size: 28),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(Icons.menu, size: 22),
                           onPressed: () {
                             Scaffold.of(context).openEndDrawer();
                           },
@@ -301,6 +321,77 @@ class MainScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            builder: (context) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    ListTile(
+                      leading: const CircleAvatar(
+                        backgroundColor: Color(0xFFEF5350),
+                        child: Icon(Icons.remove_circle_outline, color: Colors.white),
+                      ),
+                      title: const Text('Add Expense', style: TextStyle(fontWeight: FontWeight.bold)),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddExpensePage(apiService: apiService),
+                          ),
+                        );
+                        if (result == true && refreshTransactions != null) {
+                          await refreshTransactions!();
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    ListTile(
+                      leading: const CircleAvatar(
+                        backgroundColor: Color(0xFF66BB6A),
+                        child: Icon(Icons.add_circle_outline, color: Colors.white),
+                      ),
+                      title: const Text('Add Income', style: TextStyle(fontWeight: FontWeight.bold)),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddIncomePage(apiService: apiService),
+                          ),
+                        );
+                        if (result == true && refreshTransactions != null) {
+                          await refreshTransactions!();
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+        backgroundColor: Colors.blue[400],
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

@@ -1,19 +1,30 @@
-const ExpensesRepository = require ('../repository/expenses.repository');
+const ExpensesRepository = require("../repository/expenses.repository");
+
+const postAllExpenses = async (userId) => {
+  const expenses = await ExpensesRepository.postAllExpenses(userId);
+  return expenses;
+};
+
+const postExpenses = async ({ userId, expenseAmount, categoryName }) => {
 
 
-const getAllExpenses = async () => {
-    const expenses = await ExpensesRepository.getAllExpenses();
-    return expenses;
-    
-}
+  console.log("in expenses service",expenseAmount, categoryName);
 
-const postExpenses = async(expenseAmount, categoryName)=>{
-    console.log(expenseAmount, categoryName);
-    const expenses = await ExpensesRepository.postExpenses(expenseAmount , categoryName);
-    return expenses;
-}
+ if (!userId || !expenseAmount || !categoryName) {
+    console.error(" Missing required fields in service");
+    return null;
+  }
 
-module.exports ={
-    getAllExpenses,
-    postExpenses,
-}
+  const expenses = await ExpensesRepository.postExpenses({
+    userId,
+    expenseAmount,
+    categoryName,
+  });
+
+  return expenses;
+};
+
+module.exports = {
+  postAllExpenses,
+  postExpenses,
+};

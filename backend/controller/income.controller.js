@@ -2,8 +2,8 @@ const IncomeService = require("../services/income.service");
 
 const getIncome = async (req, res) => {
   console.log("getting income");
-  const { userId } = req.body;
-  const income = await IncomeService.getIncome({ userId });
+  const { userId } = req.query;
+  const income = await IncomeService.getIncome(userId);
   res.status(200).json(income);
 };
 

@@ -1,12 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:wallet_watchers_app/models/transaction.dart';
+import 'package:wallet_watchers_app/models/user.dart';
 import 'package:wallet_watchers_app/nav/bottom_nav_bar.dart';
-import 'package:wallet_watchers_app/pages/add_transaction_page.dart';
+import 'package:wallet_watchers_app/pages/add_expense_page.dart';
 import 'package:wallet_watchers_app/pages/main_screen.dart';
+import 'package:wallet_watchers_app/services/api_service.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final User user;
+  const HomePage({super.key, required this.user});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -14,11 +17,32 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Transaction> transactions = [];
+  bool _isLoading = true;
+  final ApiService _apiService = ApiService();
 
-  void _addTransaction(Transaction transaction) {
-    setState(() {
-      transactions.add(transaction);
-    });
+  @override
+  void initState() {
+    super.initState();
+    _loadTransactions();
+  }
+
+  Future<void> _loadTransactions() async {
+    setState(() => _isLoading = true);
+    try {
+      print('Fetching expenses for userId: \\${widget.user.id}');
+      final expenses = await _apiService.fetchExpenses(widget.user.id);
+      print('Fetching incomes for userId: \\${widget.user.id}');
+      final incomes = await _apiService.fetchIncomes(widget.user.id);
+      final all = [...expenses, ...incomes];
+      all.sort((a, b) => b.date.compareTo(a.date)); // Most recent first
+      setState(() {
+        transactions = all;
+      });
+    } catch (e) {
+      // Optionally show error
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -28,31 +52,14 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         title: const Text("Wallet Watchers"),
       ),
-      bottomNavigationBar: const BottomNavBar(selectedIndex: 0),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'addTransaction',
-        tooltip: 'Add Transaction',
-        onPressed: () async {
-          final transaction = await Navigator.push<Transaction>(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddTransactionPage(),
+      bottomNavigationBar: BottomNavBar(selectedIndex: 0, user: widget.user),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : MainScreen(
+              transactions: transactions,
+              user: widget.user,
+              refreshTransactions: _loadTransactions,
             ),
-          );
-          if (transaction != null) {
-            _addTransaction(transaction);
-          }
-        },
-        backgroundColor: Colors.blue[400],
-        elevation: 4,
-        shape: const CircleBorder(),
-        child: const Icon(
-          CupertinoIcons.add,
-          color: Colors.white,
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      body: MainScreen(transactions: transactions),
     );
   }
 }

@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallet_watchers_app/models/goal.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.8:3000/api';
+  static const String baseUrl = 'http://localhost:3000/api';
   bool _useMock = false; // Toggle this to switch between mock and real API
   String? _userId;
 
@@ -149,7 +149,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> addTransaction(Transaction transaction) async {
+  Future<Map<String, dynamic>> addExpense(Transaction transaction) async {
     if (_userId!.isEmpty) await _loadUserId();
     if (_userId!.isEmpty) {
       throw Exception('User ID not set. Please login first.');
@@ -158,19 +158,12 @@ class ApiService {
     if (_useMock) {
       await Future.delayed(const Duration(seconds: 1));
       final mockResponse = {
-        // 'id': transaction.id,
         'userId': _userId,
         'expenseAmount': transaction.amount,
-        // 'description': transaction.description,
-        // 'date': transaction.date.toIso8601String(),
-        // 'type': transaction.type.toString().split('.').last,
         'categoryName': transaction.category.toString().split('.').last,
-        // 'createdAt': DateTime.now().toIso8601String(),
       };
-
       print('Mock API: Transaction added successfully');
       print('Response: ${jsonEncode(mockResponse)}');
-
       return mockResponse;
     }
 
@@ -186,9 +179,6 @@ class ApiService {
             body: jsonEncode({
               'userId': _userId,
               'expenseAmount': transaction.amount,
-              // 'description': transaction.description,
-              // 'date': transaction.date.toIso8601String(),
-              // 'type': transaction.type.toString().split('.').last,
               'categoryName': transaction.category.toString().split('.').last,
             }),
           )
@@ -326,5 +316,75 @@ class ApiService {
 
   Future<Goal> toggleGoalAchieved(Goal goal) async {
     return await updateGoal(goal.copyWith(isAchieved: !goal.isAchieved));
+  }
+
+  Future<Map<String, dynamic>> addIncome({required double incomeAmount, required String incomeName}) async {
+    if (_userId!.isEmpty) await _loadUserId();
+    if (_userId!.isEmpty) {
+      throw Exception('User ID not set. Please login first.');
+    }
+
+    if (_useMock) {
+      await Future.delayed(const Duration(seconds: 1));
+      final mockResponse = {
+        'userId': _userId,
+        'incomeAmount': incomeAmount,
+        'incomeName': incomeName,
+      };
+      print('Mock API: Income added successfully');
+      print('Response: \\${jsonEncode(mockResponse)}');
+      return mockResponse;
+    }
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/income/postIncome'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $_userId',
+            },
+            body: jsonEncode({
+              'userId': _userId,
+              'incomeAmount': incomeAmount,
+              'incomeName': incomeName,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Income failed: \\${response.statusCode}');
+      }
+    } catch (e) {
+      print('Exception while adding income: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Transaction>> fetchExpenses(String userId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/expenses/postAllExpenses'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'userId': userId}),
+    );
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((json) => Transaction.fromJson(json, TransactionType.expense)).toList();
+    } else {
+      throw Exception('Failed to load expenses');
+    }
+  }
+
+  Future<List<Transaction>> fetchIncomes(String userId) async {
+    print('userIdddd: $userId');
+    final response = await http.get(Uri.parse('$baseUrl/income/getIncome?userId=$userId'));
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((json) => Transaction.fromJson(json, TransactionType.income)).toList();
+    } else {
+      throw Exception('Failed to load incomes');
+    }
   }
 }
