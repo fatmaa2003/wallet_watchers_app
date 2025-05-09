@@ -35,4 +35,6 @@ const postExpenses = async (req, res) => {
   res.status(201).json(expense);
 };
 
+
 module.exports = { postAllExpenses, postExpenses };
+
