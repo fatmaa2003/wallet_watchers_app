@@ -56,4 +56,19 @@ class Transaction {
       'category': category.toString().split('.').last,
     };
   }
+
+  static Transaction fromJson(Map<String, dynamic> json, TransactionType type) {
+    return Transaction(
+      id: json['id'] ?? json['_id'] ?? '',
+      amount: (json['amount'] ?? json['expenseAmount'] ?? json['incomeAmount'] ?? 0).toDouble(),
+      description: json['description'] ?? json['incomeName'] ?? '',
+      date: DateTime.parse(json['date'] ?? json['createdAt'] ?? DateTime.now().toIso8601String()),
+      type: type,
+      category: TransactionCategory.values.firstWhere(
+        (e) => e.toString().split('.').last.toLowerCase() ==
+            (json['category'] ?? json['categoryName'] ?? 'other').toString().toLowerCase(),
+        orElse: () => TransactionCategory.other,
+      ),
+    );
+  }
 }

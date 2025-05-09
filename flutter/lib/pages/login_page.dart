@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:wallet_watchers_app/services/api_service.dart';
+import 'package:wallet_watchers_app/models/user.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -31,13 +32,18 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       try {
-        await _apiService.login(
+        final response = await _apiService.login(
           email: _emailController.text,
           password: _passwordController.text,
         );
 
         if (mounted) {
-          Navigator.pushReplacementNamed(context, '/home');
+          final user = User.fromJson(response['user']);
+          Navigator.pushReplacementNamed(
+            context,
+            '/home',
+            arguments: user,
+          );
         }
       } catch (e) {
         if (mounted) {

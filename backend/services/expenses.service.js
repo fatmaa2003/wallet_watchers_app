@@ -27,4 +27,6 @@ const postExpenses = async ({ userId, expenseAmount, categoryName }) => {
 module.exports = {
   postAllExpenses,
   postExpenses,
+
 };
+

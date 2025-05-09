@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:wallet_watchers_app/nav/bottom_nav_bar.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:wallet_watchers_app/models/user.dart';
 
 class StatisticsPage extends StatefulWidget {
-  const StatisticsPage({super.key});
+  final User user;
+  const StatisticsPage({super.key, required this.user});
 
   @override
   _StatisticsPageState createState() => _StatisticsPageState();
@@ -121,7 +123,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
           ),
         ),
       ),
-      bottomNavigationBar: const BottomNavBar(selectedIndex: 1),
+      bottomNavigationBar: BottomNavBar(selectedIndex: 1, user: widget.user),
     );
   }
 

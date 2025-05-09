@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:wallet_watchers_app/models/user.dart';
 import 'package:wallet_watchers_app/pages/goals_page.dart';
 import 'package:wallet_watchers_app/pages/profile_page.dart';
 
 class CustomMenu extends StatelessWidget {
-  const CustomMenu({super.key});
+  final User user;
+
+  const CustomMenu({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -14,16 +17,40 @@ class CustomMenu extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(
+          DrawerHeader(
             decoration: BoxDecoration(
-              color: Colors.blueAccent,
-            ),
-            child: Text(
-              'Menu',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
+              gradient: LinearGradient(
+                colors: [Colors.blue[400]!, Colors.blue[600]!],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Menu',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  user.fullName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  user.email,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -35,7 +62,7 @@ class CustomMenu extends StatelessWidget {
               Navigator.pop(context); // Close drawer
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ProfilePage()),
+                MaterialPageRoute(builder: (context) => ProfilePage(user: user)),
               );
             },
           ),
@@ -65,11 +92,23 @@ class CustomMenu extends StatelessWidget {
 
           // Contact Us (placeholder)
           ListTile(
-            leading: const Icon(Icons.mail_outline),
+            leading: const Icon(Icons.contact_support),
             title: const Text('Contact Us'),
             onTap: () {
               Navigator.pop(context);
               // Implement later
+            },
+          ),
+
+          const Divider(),
+
+          // Logout
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Logout', style: TextStyle(color: Colors.red)),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, '/login');
             },
           ),
         ],

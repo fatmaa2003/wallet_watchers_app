@@ -24,6 +24,7 @@ const userSchema = new Schema({
     required: true,
   },
 
+
   // Optional: if user has a default category
   categoryId: {
     type: Schema.Types.ObjectId,
@@ -56,4 +57,5 @@ module.exports = User;
 
 
     //list of objects catrgory id (taken men el category table) and expenese
+
 

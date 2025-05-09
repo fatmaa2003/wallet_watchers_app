@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:wallet_watchers_app/pages/home_page.dart';
 import 'package:wallet_watchers_app/pages/statistics_page.dart';
+import 'package:wallet_watchers_app/models/user.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int selectedIndex;
+  final User user;
 
-  const BottomNavBar({super.key, required this.selectedIndex});
+  const BottomNavBar({super.key, required this.selectedIndex, required this.user});
 
   void _onItemTapped(BuildContext context, int index) {
     if (index == selectedIndex) return;
@@ -13,10 +15,10 @@ class BottomNavBar extends StatelessWidget {
     Widget page;
     switch (index) {
       case 0:
-        page = const HomePage();
+        page = HomePage(user: user);
         break;
       case 1:
-        page = const StatisticsPage();
+        page = StatisticsPage(user: user);
         break;
       default:
         return;

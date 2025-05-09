@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:wallet_watchers_app/services/api_service.dart';
+import 'package:wallet_watchers_app/models/user.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -37,7 +38,7 @@ class _SignUpPageState extends State<SignUpPage> {
       });
 
       try {
-        await _apiService.signup(
+        final response = await _apiService.signup(
           firstName: _firstNameController.text,
           lastName: _lastNameController.text,
           email: _emailController.text,
@@ -46,7 +47,8 @@ class _SignUpPageState extends State<SignUpPage> {
         );
 
         if (mounted) {
-          Navigator.pushReplacementNamed(context, '/home');
+          final user = User.fromJson(response['user']);
+          Navigator.pushReplacementNamed(context, '/home', arguments: user);
         }
       } catch (e) {
         if (mounted) {
