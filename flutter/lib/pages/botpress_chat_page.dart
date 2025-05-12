@@ -11,47 +11,83 @@ class BotpressChatPage extends StatefulWidget {
 
 class _BotpressChatPageState extends State<BotpressChatPage> {
   late WebViewController _controller;
-  String? _chatUrl;
+  String? webChatUrl;
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _loadChatUrl();
+    _initWebView();
   }
 
-  Future<void> _loadChatUrl() async {
-    final prefs = await SharedPreferences.getInstance();
-    final webChatUserId = prefs.getString('webChatUserId') ?? 'guest';
+  Future<void> _initWebView() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId') ?? 'guest';
+      final externalId = 'wallet_user_$userId';
 
-    print('WebChat userId: $webChatUserId');
+      final configUrl = 'https://files.bpcontent.cloud/2025/04/28/16/20250428162136-6JLCM7ZL.json';
 
-    const baseBotpressUrl =
-        'https://cdn.botpress.cloud/webchat/v2.4/shareable.html?configUrl=https://files.bpcontent.cloud/2025/04/28/16/20250428162136-6JLCM7ZL.json';
+      setState(() {
+        webChatUrl = 'https://cdn.botpress.cloud/webchat/v2.5/shareable.html'
+            '?configUrl=$configUrl&externalId=$externalId';
+        _isLoading = false;
+      });
 
-    final url = '$baseBotpressUrl'
-        '&userId=$webChatUserId'
-        '&sessionId=$webChatUserId'
-        '&clearHistory=true';
+      _controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setNavigationDelegate(NavigationDelegate(
+          onPageStarted: (url) => setState(() => _isLoading = true),
+          onPageFinished: (url) => setState(() => _isLoading = false),
+          onWebResourceError: (error) => setState(() {
+            _error = 'Failed to load chat: \${error.description}';
+            _isLoading = false;
+          }),
+        ))
+        ..loadRequest(Uri.parse(webChatUrl!));
 
-    print('Loading Botpress URL: $url');
-
-    _controller = WebViewController()
-      ..clearCache() // ✅ Clear session
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse(url));
-
-    setState(() {
-      _chatUrl = url;
-    });
+    } catch (e) {
+      setState(() {
+        _error = 'Initialization error: \${e.toString()}';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Little Watcher Chat')),
-      body: _chatUrl == null
-          ? const Center(child: CircularProgressIndicator())
-          : WebViewWidget(controller: _controller),
+      appBar: AppBar(title: const Text('AI Assistant')),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(_error!),
+            ElevatedButton(
+              onPressed: _initWebView,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_isLoading || webChatUrl == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Stack(
+      children: [
+        WebViewWidget(controller: _controller),
+        if (_isLoading) const LinearProgressIndicator(),
+      ],
     );
   }
 }

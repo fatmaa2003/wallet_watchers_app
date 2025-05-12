@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:wallet_watchers_app/models/goal.dart';
+import 'package:wallet_watchers_app/models/user.dart';
+import 'package:wallet_watchers_app/pages/home_page.dart';
 import 'package:wallet_watchers_app/services/api_service.dart';
 
 class GoalsPage extends StatefulWidget {
-  const GoalsPage({super.key});
+  final User user;
+  const GoalsPage({super.key, required this.user});
 
   @override
   State<GoalsPage> createState() => _GoalsPageState();
@@ -67,7 +70,7 @@ class _GoalsPageState extends State<GoalsPage> {
                 icon: 'flag',
                 savedAmount: double.tryParse(savedController.text.trim()) ?? 0,
                 targetAmount:
-                    double.tryParse(targetController.text.trim()) ?? 0,
+                double.tryParse(targetController.text.trim()) ?? 0,
                 isAchieved: false,
               );
 
@@ -91,7 +94,7 @@ class _GoalsPageState extends State<GoalsPage> {
 
   void _showEditSavedDialog(Goal goal) {
     final savedController =
-        TextEditingController(text: goal.savedAmount.toString());
+    TextEditingController(text: goal.savedAmount.toString());
 
     showDialog(
       context: context,
@@ -208,7 +211,12 @@ class _GoalsPageState extends State<GoalsPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushReplacementNamed(context, '/home');
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomePage(user: widget.user),
+              ),
+            );
           },
         ),
       ),

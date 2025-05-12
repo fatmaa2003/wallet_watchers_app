@@ -1,0 +1,12 @@
+Bills & Fees
+Food & Drinks
+Transport
+Entertainment
+Food
+Gas
+Transportation
+bills
+entertainment
+other
+shopping
+income
