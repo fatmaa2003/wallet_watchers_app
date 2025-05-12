@@ -85,7 +85,7 @@ class CustomMenu extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const GoalsPage()),
+                MaterialPageRoute(builder: (context) => GoalsPage(user: user)),
               );
             },
           ),

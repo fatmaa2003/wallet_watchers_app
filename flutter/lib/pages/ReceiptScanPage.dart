@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:wallet_watchers_app/nav/bottom_nav_bar.dart';
 import 'package:wallet_watchers_app/services/api_service.dart';
 
 class ReceiptScanPage extends StatefulWidget {
@@ -61,8 +60,10 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> {
 
     try {
       final inputImage = InputImage.fromFilePath(_image!.path);
-      final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
-      final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
+      final textRecognizer =
+          TextRecognizer(script: TextRecognitionScript.latin);
+      final RecognizedText recognizedText =
+          await textRecognizer.processImage(inputImage);
 
       setState(() {
         _extractedText = recognizedText.text;
@@ -122,7 +123,6 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> {
         backgroundColor: Colors.blue[400],
         foregroundColor: Colors.white,
       ),
-      bottomNavigationBar: const BottomNavBar(selectedIndex: 3),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -179,8 +179,8 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> {
                 child: _isProcessing
                     ? const Center(child: CircularProgressIndicator())
                     : _image != null
-                    ? Image.file(_image!)
-                    : const Center(child: Text('No image selected')),
+                        ? Image.file(_image!)
+                        : const Center(child: Text('No image selected')),
               ),
               const SizedBox(height: 20),
               TextField(

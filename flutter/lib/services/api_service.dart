@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallet_watchers_app/models/goal.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'http://172.29.67.231:3000/api';
   bool _useMock = false; // Toggle this to switch between mock and real API
   String? _userId;
 
@@ -248,22 +248,6 @@ class ApiService {
     }
   }
 
-  Future<void> saveWebChatUserId(String userId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final webChatId = 'user_${DateTime.now().millisecondsSinceEpoch}_$userId';
-    await prefs.setString('webChatUserId', webChatId);
-  }
-
-  Future<String> getWebChatUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('webChatUserId') ?? 'guest';
-  }
-
-  Future<void> clearWebChatUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('webChatUserId');
-  }
-
   Future<List<Goal>> fetchGoals() async {
     if (_userId == null || _userId!.isEmpty) await _loadUserId();
 
@@ -318,7 +302,8 @@ class ApiService {
     return await updateGoal(goal.copyWith(isAchieved: !goal.isAchieved));
   }
 
-  Future<Map<String, dynamic>> addIncome({required double incomeAmount, required String incomeName}) async {
+  Future<Map<String, dynamic>> addIncome(
+      {required double incomeAmount, required String incomeName}) async {
     if (_userId!.isEmpty) await _loadUserId();
     if (_userId!.isEmpty) {
       throw Exception('User ID not set. Please login first.');
@@ -371,7 +356,9 @@ class ApiService {
     );
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
-      return data.map((json) => Transaction.fromJson(json, TransactionType.expense)).toList();
+      return data
+          .map((json) => Transaction.fromJson(json, TransactionType.expense))
+          .toList();
     } else {
       throw Exception('Failed to load expenses');
     }
@@ -379,12 +366,23 @@ class ApiService {
 
   Future<List<Transaction>> fetchIncomes(String userId) async {
     print('userIdddd: $userId');
-    final response = await http.get(Uri.parse('$baseUrl/income/getIncome?userId=$userId'));
+    final response =
+        await http.get(Uri.parse('$baseUrl/income/getIncome?userId=$userId'));
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
-      return data.map((json) => Transaction.fromJson(json, TransactionType.income)).toList();
+      return data
+          .map((json) => Transaction.fromJson(json, TransactionType.income))
+          .toList();
     } else {
       throw Exception('Failed to load incomes');
     }
+  }
+
+  Future<String> getWebChatExternalId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId') ?? 'guest';
+    final externalId = 'wallet_user_$userId'; // Must be unique for each user
+    await prefs.setString('webChatExternalId', externalId);
+    return externalId;
   }
 }
