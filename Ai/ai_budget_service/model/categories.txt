@@ -1,12 +1,16 @@
+Bills
 Bills & Fees
-Food & Drinks
-Transport
+Education
 Entertainment
 Food
-Gas
+Food & Drinks
+Health
+Insurance
+Other
+Shopping
+Subscriptions
+Transport
 Transportation
-bills
-entertainment
-other
-shopping
-income
+Travel
+Utilities
+
