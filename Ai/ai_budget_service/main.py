@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-# Load env
+# Load environment variables
 load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME = os.getenv("DB_NAME")
@@ -19,15 +19,18 @@ DB_NAME = os.getenv("DB_NAME")
 # MongoDB setup
 client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
-budgets_col = db["budgets"]  # New: collection for storing AI predictions
+budgets_col = db["budgets"]
+income_col = db["income"]
+expenses_col = db["expenses"]
 
-# Load AI model + scaler
+# Load GRU model and scaler
 model = tf.keras.models.load_model("model/gru_model.keras")
 scaler = joblib.load("model/scaler.pkl")
 
-# Load training categories
+# Load trained category list
 with open("model/categories.txt", "r") as f:
     categories = [line.strip() for line in f.readlines()]
+lowercase_categories = [c.lower() for c in categories]  # for matching
 
 # FastAPI setup
 app = FastAPI()
@@ -49,29 +52,30 @@ async def predict_budget(payload: dict):
 
         user_object_id = ObjectId(user_id)
 
-        # Get expense & income history
-        incomes = list(db.income.find({"userId": user_object_id}))
-        expenses = list(db.expenses.find({"userId": user_object_id}))
+        # Fetch income and expenses for the user
+        incomes = list(income_col.find({"userId": user_object_id}))
+        expenses = list(expenses_col.find({"userId": user_object_id}))
 
         if not expenses:
             raise HTTPException(status_code=404, detail="No expense data found")
 
         income_sum = sum(item.get("incomeAmount", 0) for item in incomes) if incomes else 0
 
-        # Group expenses
+        # Group expense totals by lowercased category name
         expense_by_category = {}
         for expense in expenses:
-            cat = expense.get("categoryName", "Other")
+            raw_cat = expense.get("categoryName", "Other").strip()
+            cat = raw_cat.lower()
             amount = expense.get("expenseAmount", 0)
             expense_by_category[cat] = expense_by_category.get(cat, 0) + amount
 
-        # Input vector creation
+        # Prepare input vector aligned with trained categories
         input_vector = []
-        for cat in categories:
+        for i, cat in enumerate(categories):
             if cat.lower() == "income":
                 input_vector.append(income_sum)
             else:
-                input_vector.append(expense_by_category.get(cat, 0))
+                input_vector.append(expense_by_category.get(cat.lower(), 0))
 
         if len(input_vector) != scaler.n_features_in_:
             raise ValueError(f"Input vector length {len(input_vector)} does not match scaler input {scaler.n_features_in_}")
@@ -83,29 +87,30 @@ async def predict_budget(payload: dict):
         predicted_values = scaler.inverse_transform(prediction)[0]
         python_values = [float(val) for val in predicted_values]
 
-        # Get predicted month
-        next_month = datetime.now() + relativedelta(months=1)
-        predicted_month_str = next_month.strftime("%B %Y")  # e.g., "June 2025"
+        # Identify user's used categories in lowercase
+        user_categories = set(expense.get("categoryName", "").strip().lower() for expense in expenses)
 
-        # Build response
-        total_spending = round(float(sum(python_values[:-1])) if "income" in categories else sum(python_values), 2)
+        # Filter output to only include categories used by user (case-insensitive)
         category_limits = [
-            {"category": cat, "amount": round(float(python_values[i]), 2)}
+            {"category": cat, "amount": round(python_values[i], 2)}
             for i, cat in enumerate(categories)
+            if cat.lower() in user_categories
         ]
 
+        # Determine next month's label
+        next_month = datetime.now() + relativedelta(months=1)
+        predicted_month_str = next_month.strftime("%B %Y")
+
+        # Build and return response
         response = {
             "userId": str(user_object_id),
             "predictedMonth": predicted_month_str,
-            "total": total_spending,
+            "total": round(sum([c["amount"] for c in category_limits]), 2),
             "byCategory": category_limits,
             "createdAt": datetime.utcnow()
         }
 
-        # Save to MongoDB
         budgets_col.insert_one(response)
-
-        # Remove ObjectId and createdAt from response (optional)
         response.pop("_id", None)
 
         return response
