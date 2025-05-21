@@ -3,9 +3,10 @@ import 'package:http/http.dart' as http;
 import 'package:wallet_watchers_app/models/transaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallet_watchers_app/models/goal.dart';
+import 'package:wallet_watchers_app/models/collaborative_goal.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://172.29.67.231:3000/api';
+  static const String baseUrl = 'http://192.168.1.8:3000/api';
   bool _useMock = false; // Toggle this to switch between mock and real API
   String? _userId;
 
@@ -146,53 +147,6 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Signup error: $e');
-    }
-  }
-
-  Future<Map<String, dynamic>> addExpense(Transaction transaction) async {
-    if (_userId!.isEmpty) await _loadUserId();
-    if (_userId!.isEmpty) {
-      throw Exception('User ID not set. Please login first.');
-    }
-
-    if (_useMock) {
-      await Future.delayed(const Duration(seconds: 1));
-      final mockResponse = {
-        'userId': _userId,
-        'expenseAmount': transaction.amount,
-        'categoryName': transaction.category.toString().split('.').last,
-      };
-      print('Mock API: Transaction added successfully');
-      print('Response: ${jsonEncode(mockResponse)}');
-      return mockResponse;
-    }
-
-    try {
-      print(transaction);
-      final response = await http
-          .post(
-            Uri.parse('$baseUrl/expenses/postExpenses'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $_userId',
-            },
-            body: jsonEncode({
-              'userId': _userId,
-              'expenseAmount': transaction.amount,
-              'categoryName': transaction.category.toString().split('.').last,
-            }),
-          )
-          .timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 201) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Transaction failed: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Exception while adding transaction: $e');
-      print('Transaction details: ${jsonEncode(transaction.toJson())}');
-      rethrow;
     }
   }
 
@@ -384,5 +338,182 @@ class ApiService {
     final externalId = 'wallet_user_$userId'; // Must be unique for each user
     await prefs.setString('webChatExternalId', externalId);
     return externalId;
+  }
+
+  Future<void> deleteCollaborativeGoal(String goalId) async {
+    final response =
+        await http.delete(Uri.parse('$baseUrl/collaborative-goals/$goalId'));
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete collaborative goal');
+    }
+  }
+
+  Future<void> addFriendToGoal(String goalId, String email) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/collaborative-goals/add-friend'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'goalId': goalId, 'email': email}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to invite friend');
+    }
+  }
+
+  Future<void> updateContribution(String goalId, double amount) async {
+    final uid = await userId;
+    final response = await http.put(
+      Uri.parse('$baseUrl/collaborative-goals/update-contribution'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'goalId': goalId, 'userId': uid, 'amount': amount}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update contribution');
+    }
+  }
+
+  Future<void> removeFriend(String goalId, String userId) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/collaborative-goals/remove-friend'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'goalId': goalId, 'userId': userId}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to remove friend');
+    }
+  }
+
+  Future<void> leaveGoal(String goalId) async {
+    final uid = await userId;
+    final response = await http.put(
+      Uri.parse('$baseUrl/collaborative-goals/leave'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'goalId': goalId, 'userId': uid}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to leave goal');
+    }
+  }
+
+  Future<void> respondToInvite(String goalId, String status) async {
+    final uid = await userId;
+    final response = await http.put(
+      Uri.parse('$baseUrl/collaborative-goals/respond-invite'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'goalId': goalId, 'userId': uid, 'status': status}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to respond to invite');
+    }
+  }
+
+  Future<List<CollaborativeGoal>> fetchCollaborativeGoals() async {
+    final uid = await userId;
+    final response =
+        await http.get(Uri.parse('$baseUrl/collaborative-goals/$uid'));
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((json) => CollaborativeGoal.fromJson(json)).toList();
+    } else {
+      print('fetchCollaborativeGoals failed: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      throw Exception('Failed to load collaborative goals');
+    }
+  }
+
+  Future<List<CollaborativeGoal>> fetchInvites() async {
+    final uid = await userId;
+    final response = await http
+        .get(Uri.parse('$baseUrl/collaborative-goals/notifications/$uid'));
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((json) => CollaborativeGoal.fromJson(json)).toList();
+    } else {
+      print('fetchInvites failed: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      throw Exception('Failed to load invites');
+    }
+  }
+
+  Future<void> createCollaborativeGoal(String title, double amount) async {
+    final uid = await userId;
+    final response = await http.post(
+      Uri.parse('$baseUrl/collaborative-goals/create'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'title': title,
+        'totalTargetPerUser': amount,
+        'createdBy': uid,
+        'participants': [
+          {'userId': uid, 'savedAmount': 0, 'status': 'accepted'}
+        ]
+      }),
+    );
+    print('Goal creation response: ${response.statusCode} - ${response.body}');
+    if (response.statusCode != 201) {
+      throw Exception('Failed to create collaborative goal');
+    }
+  }
+
+  Future<Map<String, dynamic>> addExpense(Transaction transaction) async {
+    if (_userId == null || _userId!.isEmpty) {
+      await _loadUserId();
+    }
+
+    if (_userId == null || _userId!.isEmpty) {
+      throw Exception('User ID not set. Please login first.');
+    }
+
+    if (_useMock) {
+      await Future.delayed(const Duration(seconds: 1));
+      final mockResponse = {
+        'userId': _userId,
+        'expenseAmount': transaction.amount,
+        'expenseName': transaction.description ?? 'Unnamed',
+        'categoryName': transaction.category.toString().split('.').last,
+      };
+      print('🧪 Mock API: Transaction added successfully');
+      print('🧾 Response: ${jsonEncode(mockResponse)}');
+      return mockResponse;
+    }
+
+    try {
+      final categoryName = transaction.category.toString().split('.').last;
+      final expenseName = transaction.description?.trim().isNotEmpty == true
+          ? transaction.description!
+          : "Unnamed";
+
+      print(
+          "📤 Sending expense: amount=${transaction.amount}, name=$expenseName, category=$categoryName");
+
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/expenses/postExpenses'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $_userId',
+            },
+            body: jsonEncode({
+              'userId': _userId,
+              'expenseName': expenseName,
+              'expenseAmount': transaction.amount,
+              'categoryName': categoryName,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        print("✅ Expense saved and budget updated: $decoded");
+        return decoded;
+      } else {
+        print(
+            "❌ Failed to save expense: ${response.statusCode} ${response.body}");
+        throw Exception('Transaction failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Exception while adding transaction: $e');
+      print('📦 Transaction details: ${jsonEncode(transaction.toJson())}');
+      rethrow;
+    }
   }
 }

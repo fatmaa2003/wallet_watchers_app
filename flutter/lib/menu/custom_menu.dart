@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:wallet_watchers_app/models/user.dart';
 import 'package:wallet_watchers_app/pages/goals_page.dart';
 import 'package:wallet_watchers_app/pages/profile_page.dart';
+import 'package:wallet_watchers_app/pages/collaborative_goals_page.dart';
+import 'package:wallet_watchers_app/pages/notifications_page.dart';
 
 class CustomMenu extends StatelessWidget {
   final User user;
@@ -62,18 +64,23 @@ class CustomMenu extends StatelessWidget {
               Navigator.pop(context); // Close drawer
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ProfilePage(user: user)),
+                MaterialPageRoute(
+                    builder: (context) => ProfilePage(user: user)),
               );
             },
           ),
 
-          // Notifications (placeholder)
+          // Notifications Page
           ListTile(
             leading: const Icon(Icons.notifications),
             title: const Text('Notifications'),
             onTap: () {
               Navigator.pop(context);
-              // Implement later
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const NotificationsPage()),
+              );
             },
           ),
 
@@ -86,6 +93,20 @@ class CustomMenu extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => GoalsPage(user: user)),
+              );
+            },
+          ),
+
+          //Collaborative Goals
+          ListTile(
+            leading: const Icon(Icons.group),
+            title: const Text('Collaborative Goals'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const CollaborativeGoalsPage()),
               );
             },
           ),
