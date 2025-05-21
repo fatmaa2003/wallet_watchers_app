@@ -14,7 +14,7 @@ enum TransactionCategory {
 class Transaction {
   final String id;
   final double amount;
-  final String description;
+  final String expenseName;
   final DateTime date;
   final TransactionType type;
   final TransactionCategory category;
@@ -22,7 +22,7 @@ class Transaction {
   Transaction({
     required this.id,
     required this.amount,
-    required this.description,
+    required this.expenseName,
     required this.date,
     required this.type,
     required this.category,
@@ -50,7 +50,7 @@ class Transaction {
     return {
       'id': id,
       'amount': amount,
-      'description': description,
+      'expenseName': expenseName,
       'date': date.toIso8601String(),
       'type': type.toString().split('.').last,
       'category': category.toString().split('.').last,
@@ -61,7 +61,7 @@ class Transaction {
     return Transaction(
       id: json['id'] ?? json['_id'] ?? '',
       amount: (json['amount'] ?? json['expenseAmount'] ?? json['incomeAmount'] ?? 0).toDouble(),
-      description: json['description'] ?? json['incomeName'] ?? '',
+      expenseName: json['expenseName'] ?? json['incomeName'] ?? 'Unnamed',
       date: DateTime.parse(json['date'] ?? json['createdAt'] ?? DateTime.now().toIso8601String()),
       type: type,
       category: TransactionCategory.values.firstWhere(
