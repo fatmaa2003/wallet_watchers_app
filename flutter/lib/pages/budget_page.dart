@@ -15,45 +15,106 @@ class BudgetPage extends StatefulWidget {
 class _BudgetPageState extends State<BudgetPage> {
   Map<String, dynamic>? _budgetData;
   bool _isLoading = false;
-  String? _error;
+  String? _message;
 
   @override
   void initState() {
     super.initState();
-    _getPredictedBudget();
+    _fetchLatestBudgetOnLoad();
   }
 
-  Future<void> _getPredictedBudget() async {
+  Future<void> _fetchLatestBudgetOnLoad() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final service = BudgetService();
+      final budgets = await service.fetchSavedBudgets();
+      if (budgets.isNotEmpty) {
+        setState(() {
+          _budgetData = budgets.first;
+        });
+        print("📦 Loaded saved budget on load: ${budgets.first}");
+      } else {
+        print("❗ No saved budgets found for this user.");
+      }
+    } catch (e) {
+      debugPrint("❌ Failed to load saved budget: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _generateBudget() async {
     setState(() {
       _isLoading = true;
-      _error = null;
+      _message = null;
     });
 
     try {
-      final budgetService = BudgetService();
-      final result = await budgetService.generateBudget();
-      print("🎯 Budget result: $result");
+      final service = BudgetService();
+      final result = await service.generateBudget();
 
-      setState(() {
-        _budgetData = result;
-      });
+      print("🧠 Backend result: $result");
+
+      final message = result['message'] ?? 'Budget processed.';
+      final budget = result['budget'];
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+
+      // ✅ Only update budgetData if a valid budget is returned
+      if (budget != null &&
+          budget['total'] != null &&
+          budget['byCategory'] != null &&
+          budget['byCategory'] is List) {
+        print("💾 Updating displayed budget");
+        setState(() {
+          _budgetData = budget;
+        });
+      } else {
+        print("✅ Message shown, keeping existing budget on screen");
+        // Don't clear the UI — retain the previous _budgetData
+      }
+
+      // ✅ Optional: Show AI alert if enough history exists
+      if ((budget?['historyLength'] ?? 0) >= 3) {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text("📊 Data Insight"),
+            content: const Text(
+              "You have at least 3 months of historical data. This helps AI improve its predictions.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              )
+            ],
+          ),
+        );
+      }
     } catch (e) {
-      print("❌ Error fetching budget: $e");
-      setState(() {
-        _error = 'Failed to generate budget: $e';
-      });
+      print("❌ Exception in _generateBudget: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Error: $e")),
+      );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
   Widget _buildBudgetList() {
-    if (_budgetData == null) return const SizedBox.shrink();
+    print("📦 Rendering budget data: $_budgetData");
 
-    final categoryList = _budgetData!['byCategory'] as List;
-    final total = _budgetData!['total'];
+    if (_budgetData == null) {
+      return const Center(
+        child: Text("No budget data available. Click the button to generate."),
+      );
+    }
+
+    final categoryList = (_budgetData!['byCategory'] as List?) ?? [];
+    final total = _budgetData!['total'] ?? 0.0;
     final predictedMonth = _budgetData!['predictedMonth'] ?? '';
 
     return Column(
@@ -70,13 +131,13 @@ class _BudgetPageState extends State<BudgetPage> {
         ),
         const SizedBox(height: 16),
         const Text(
-          "Suggested Category Limits:",
+          "Category Limits:",
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         ...categoryList.map((item) {
-          final cat = item['category'];
-          final amt = item['amount'];
+          final cat = item['category'] ?? 'Unknown';
+          final amt = item['amount'] ?? 0.0;
           return Card(
             margin: const EdgeInsets.symmetric(vertical: 4),
             child: ListTile(
@@ -104,15 +165,25 @@ class _BudgetPageState extends State<BudgetPage> {
         padding: const EdgeInsets.all(16),
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : _error != null
-                ? Center(
-                    child: Text(
-                      _error!,
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
+            : SingleChildScrollView(
+                child: Column(
+                  children: [
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.smart_toy_outlined),
+                      label: const Text("Generate Budget for Next Month"),
+                      onPressed: _generateBudget,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                      ),
                     ),
-                  )
-                : SingleChildScrollView(child: _buildBudgetList()),
+                    const SizedBox(height: 20),
+                    _buildBudgetList(),
+                  ],
+                ),
+              ),
       ),
     );
   }

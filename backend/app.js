@@ -14,6 +14,7 @@ module.exports = (app) =>
         app.use("/api/receipts", receiptRoute);
         app.use('/api/goals', goalRoutes);
         app.use("/api/botpress", botpressRoutes);
+        app.use("/api/collaborative-goals", collaborativeGoalRoutes);
 
     }
 
