@@ -42,7 +42,7 @@ const getExpensesByDate = async (userId, date) => {
   }
 };
 
-const postExpenses = async ({ userId, expenseAmount, categoryName }) => {
+const postExpenses = async ({ userId, expenseName , expenseAmount, categoryName }) => {
   try {
     const user = await User.findById(userId);
     if (!user) {
@@ -61,6 +61,7 @@ const postExpenses = async ({ userId, expenseAmount, categoryName }) => {
 
     const newExpense = new Expenses({
       userId,
+      expenseName,
       expenseAmount,
       categoryName,
     });

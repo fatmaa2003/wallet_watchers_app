@@ -6,6 +6,10 @@ const { Schema } = mongoose;
 
 const expensesSchema = new Schema(
   {
+    expenseName: {
+      type: String,
+      required: true,
+    },
     expenseAmount: {
       type: Number,
       default: 0,
