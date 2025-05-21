@@ -20,6 +20,15 @@ const postExpenses = async ({ userId, expenseName, expenseAmount, categoryName }
   });
 };
 
+const updateExpense = async (userId, expenseName, expenseAmount) => {
+  if (!userId || !expenseName || !expenseAmount) {
+    console.error("Missing required fields in service");
+    return null;
+  }
+
+  return await ExpensesRepository.updateExpense(userId, expenseName, expenseAmount);
+};
+
 const getExpensesByDate = async (userId, date) => {
   if (!userId || !date) {
     console.error("Missing required fields in service");
@@ -43,4 +52,5 @@ module.exports = {
   postExpenses,
   getExpensesByDate,
   deleteExpense,
+  updateExpense,
 };

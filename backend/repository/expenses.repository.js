@@ -16,6 +16,28 @@ const postAllExpenses = async (userId) => {
     return [];
   }
 };
+const updateExpense = async (userId, expenseName, expenseAmount) => {
+  try {
+    const normalizedName = expenseName.trim().replace(/\s+/g, " ");
+    const regex = new RegExp(`^${normalizedName}$`, "i");
+    
+    const updated = await Expenses.findOneAndUpdate(
+      { userId, expenseName: regex },
+      { expenseAmount },
+      { new: true }
+    );
+
+    if (!updated) {
+      console.log("No matching expense found");
+      return null;
+    }
+
+    return updated;
+  } catch (err) {
+    console.error("Error in updateExpense (repo):", err);
+    return null;
+  }
+};
 
 const getExpensesByDate = async (userId, date) => {
   try {
@@ -142,4 +164,5 @@ module.exports = {
   postExpenses,
   getExpensesByDate,
   deleteExpense,
+  updateExpense
 };
