@@ -468,6 +468,7 @@ class ApiService {
       final mockResponse = {
         'userId': _userId,
         'expenseAmount': transaction.amount,
+        'expenseName': transaction.description ?? 'Unnamed',
         'categoryName': transaction.category.toString().split('.').last,
       };
       print('🧪 Mock API: Transaction added successfully');
@@ -477,9 +478,12 @@ class ApiService {
 
     try {
       final categoryName = transaction.category.toString().split('.').last;
+      final expenseName = transaction.description?.trim().isNotEmpty == true
+          ? transaction.description!
+          : "Unnamed";
 
       print(
-          "📤 Sending expense: amount=${transaction.amount}, category=$categoryName");
+          "📤 Sending expense: amount=${transaction.amount}, name=$expenseName, category=$categoryName");
 
       final response = await http
           .post(
@@ -490,6 +494,7 @@ class ApiService {
             },
             body: jsonEncode({
               'userId': _userId,
+              'expenseName': expenseName,
               'expenseAmount': transaction.amount,
               'categoryName': categoryName,
             }),

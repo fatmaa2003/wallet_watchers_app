@@ -27,8 +27,14 @@ router.post("/generateBudget", async (req, res) => {
     const response = await axios.post("http://localhost:8000/predict_budget", { userId });
     const budget = response.data;
 
+    // Normalize categories before saving
+    const normalizedByCategory = budget.byCategory.map(c => ({
+      category: c.category.toLowerCase().trim(),
+      amount: c.amount
+    }));
+
     // Save to DB
-    const saved = await Budget.create({ userId, ...budget, createdAt: new Date() });
+    const saved = await Budget.create({ userId, total: budget.total, byCategory: normalizedByCategory, createdAt: new Date() });
 
     res.status(200).json({
       message: "🎉 New budget generated successfully.",
@@ -40,7 +46,7 @@ router.post("/generateBudget", async (req, res) => {
   }
 });
 
-// ✅ Deduct an expense from the most recent AI-predicted budget
+// ✅ Deduct an expense from the most recent AI-predicted budget (with fuzzy + case-insensitive matching)
 router.post("/deductExpense", async (req, res) => {
   const { userId, categoryName, expenseAmount } = req.body;
 
@@ -48,10 +54,20 @@ router.post("/deductExpense", async (req, res) => {
     const latestBudget = await Budget.findOne({ userId }).sort({ createdAt: -1 });
     if (!latestBudget) return res.status(404).json({ error: "No budget found" });
 
-    const category = latestBudget.byCategory.find(cat => cat.category === categoryName);
+    const normalizedCategoryName = categoryName.toLowerCase().trim();
+
+    console.log("🧾 Looking for category:", normalizedCategoryName);
+    console.log("🧾 Budget categories:", latestBudget.byCategory.map(c => c.category));
+
+    const category = latestBudget.byCategory.find(
+      cat => cat.category.toLowerCase().trim().includes(normalizedCategoryName)
+    );
 
     if (!category) {
-      return res.status(404).json({ error: `Category '${categoryName}' not found in budget.` });
+      return res.status(404).json({
+        error: `Category '${categoryName}' not found in budget.`,
+        availableCategories: latestBudget.byCategory.map(c => c.category),
+      });
     }
 
     category.amount = Math.max(0, category.amount - expenseAmount); // Avoid negative values
