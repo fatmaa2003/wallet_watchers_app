@@ -12,6 +12,22 @@ const postAllExpenses = async (req, res) => {
   res.status(200).json(expenses);
 };
 
+const updateExpense = async (req, res) => {
+  const { userId, expenseName, expenseAmount } = req.body;
+  console.log("In controller PATCH update:", userId, expenseName, expenseAmount);
+
+  if (!userId || !expenseName || !expenseAmount) {
+    return res.status(400).json({ error: "userId, expenseName, and expenseAmount are required" });
+  }
+
+  const updated = await ExpensesService.updateExpense(userId, expenseName, expenseAmount);
+  if (!updated) {
+    return res.status(404).json({ error: "Expense not found" });
+  }
+
+  res.status(200).json(updated);
+};
+
 const deleteExpense = async (req, res) => {
   const { userId, expenseName } = req.query;
   console.log(" in expense controller delte expense ", expenseName);
@@ -64,4 +80,5 @@ module.exports = {
   postExpenses,
   getExpensesByDate,
   deleteExpense,
+  updateExpense,
 };
