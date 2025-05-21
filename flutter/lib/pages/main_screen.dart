@@ -7,8 +7,9 @@ import 'package:wallet_watchers_app/menu/custom_menu.dart';
 import 'package:wallet_watchers_app/pages/add_expense_page.dart';
 import 'package:wallet_watchers_app/pages/add_income_page.dart';
 import 'package:wallet_watchers_app/services/api_service.dart';
+import 'package:wallet_watchers_app/pages/all_transactions_page.dart';
 
-class MainScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
   final List<Transaction> transactions;
   final User user;
   final Future<void> Function()? refreshTransactions;
@@ -20,14 +21,19 @@ class MainScreen extends StatelessWidget {
     this.refreshTransactions,
   });
 
-  double get totalBalance => transactions.fold(
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  double get totalBalance => widget.transactions.fold(
       0,
       (sum, t) =>
           sum + (t.type == TransactionType.income ? t.amount : -t.amount));
-  double get totalIncome => transactions
+  double get totalIncome => widget.transactions
       .where((t) => t.type == TransactionType.income)
       .fold(0, (sum, t) => sum + t.amount);
-  double get totalExpenses => transactions
+  double get totalExpenses => widget.transactions
       .where((t) => t.type == TransactionType.expense)
       .fold(0, (sum, t) => sum + t.amount);
 
@@ -35,7 +41,7 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final apiService = ApiService();
     return Scaffold(
-      endDrawer: CustomMenu(user: user),
+      endDrawer: CustomMenu(user: widget.user),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
@@ -73,7 +79,7 @@ class MainScreen extends StatelessWidget {
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
                                       color: Colors.grey)),
-                              Text(user.fullName,
+                              Text(widget.user.fullName,
                                   style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -168,13 +174,14 @@ class MainScreen extends StatelessWidget {
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text('Total Balance',
                         style: TextStyle(
                             fontSize: 16,
                             color: Colors.white70,
                             fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Text('\$${totalBalance.toStringAsFixed(2)}',
                         style: const TextStyle(
                             fontSize: 32,
@@ -182,7 +189,7 @@ class MainScreen extends StatelessWidget {
                             color: Colors.white)),
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                          vertical: 20, horizontal: 20),
+                          vertical: 12, horizontal: 20),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -199,24 +206,39 @@ class MainScreen extends StatelessWidget {
 
               const SizedBox(height: 40),
 
-              // Recent Transactions Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Recent Transactions',
+              // Recent Transactions Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Recent Transactions',
                       style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.black87,
-                          fontWeight: FontWeight.bold)),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text('View All',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AllTransactionsPage(user: widget.user),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'View All',
                         style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.blue[600],
-                            fontWeight: FontWeight.w500)),
-                  ),
-                ],
+                          color: Colors.blue[400],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 20),
@@ -224,94 +246,189 @@ class MainScreen extends StatelessWidget {
               // List of Transactions
               Expanded(
                 child: ListView.builder(
-                  itemCount: transactions.length,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: widget.transactions.length > 10 ? 10 : widget.transactions.length,
                   itemBuilder: (context, index) {
-                    final t = transactions[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.grey[200]!,
-                              blurRadius: 10,
-                              offset: const Offset(0, 4)),
-                        ],
+                    final t = widget.transactions[index];
+                    return Dismissible(
+                      key: Key(t.id),
+                      direction: t.type == TransactionType.expense ? DismissDirection.horizontal : DismissDirection.none,
+                      background: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.green[100],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        child: const Icon(
+                          Icons.edit_outlined,
+                          color: Colors.green,
+                          size: 30,
+                        ),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        t.color.withOpacity(0.2),
-                                        t.color.withOpacity(0.1)
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(t.icon, color: t.color),
+                      secondaryBackground: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.red[100],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.only(left: 20),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                          size: 30,
+                        ),
+                      ),
+                      confirmDismiss: (direction) async {
+                        if (direction == DismissDirection.startToEnd) {
+                          // Swipe right - Edit expense
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddExpensePage(
+                                apiService: ApiService(),
+                                initialExpense: t,
+                              ),
+                            ),
+                          );
+                          if (result == true && widget.refreshTransactions != null) {
+                            await widget.refreshTransactions!();
+                          }
+                          return false; // Don't dismiss the item
+                        } else {
+                          // Swipe left - Delete expense
+                          return await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Expense'),
+                              content: Text('Are you sure you want to delete "${t.expenseName}"?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('Cancel'),
                                 ),
-                                const SizedBox(width: 16),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                      onDismissed: (direction) async {
+                        if (direction == DismissDirection.endToStart) {
+                          try {
+                            final apiService = ApiService();
+                            await apiService.deleteExpense(widget.user.id, t.expenseName);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Expense deleted successfully')),
+                              );
+                              if (widget.refreshTransactions != null) {
+                                await widget.refreshTransactions!();
+                              }
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error deleting expense: $e')),
+                              );
+                            }
+                          }
+                        }
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.grey[200]!,
+                                blurRadius: 10,
+                                offset: const Offset(0, 4)),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Row(
                                   children: [
-                                    Text(t.description,
-                                        style: const TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.black87,
-                                            fontWeight: FontWeight.w600)),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                        '${t.date.day}/${t.date.month}/${t.date.year}',
-                                        style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey[600])),
+                                    Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            t.color.withOpacity(0.2),
+                                            t.color.withOpacity(0.1)
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(t.icon, color: t.color),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(t.expenseName,
+                                              style: const TextStyle(
+                                                  fontSize: 16,
+                                                  color: Colors.black87,
+                                                  fontWeight: FontWeight.w600),
+                                              overflow: TextOverflow.ellipsis),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                              '${t.date.day}/${t.date.month}/${t.date.year}',
+                                              style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey[600])),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '${t.type == TransactionType.income ? '+' : '-'}\$${t.amount.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: t.color,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: t.color.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    t.category.name.toUpperCase(),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '${t.type == TransactionType.income ? '+' : '-'}\$${t.amount.toStringAsFixed(2)}',
                                     style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 16,
                                       color: t.color,
-                                      fontWeight: FontWeight.w500,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: t.color.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      t.category.name.toUpperCase(),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: t.color,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -358,8 +475,8 @@ class MainScreen extends StatelessWidget {
                             builder: (context) => AddExpensePage(apiService: apiService),
                           ),
                         );
-                        if (result == true && refreshTransactions != null) {
-                          await refreshTransactions!();
+                        if (result == true && widget.refreshTransactions != null) {
+                          await widget.refreshTransactions!();
                         }
                       },
                     ),
@@ -378,8 +495,8 @@ class MainScreen extends StatelessWidget {
                             builder: (context) => AddIncomePage(apiService: apiService),
                           ),
                         );
-                        if (result == true && refreshTransactions != null) {
-                          await refreshTransactions!();
+                        if (result == true && widget.refreshTransactions != null) {
+                          await widget.refreshTransactions!();
                         }
                       },
                     ),
@@ -399,34 +516,52 @@ class MainScreen extends StatelessWidget {
   Widget _buildBalanceCard(
       String title, double amount, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      width: 150,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 16, color: Colors.white),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Text(title,
-                  style: const TextStyle(color: Colors.white70, fontSize: 14)),
-              Text('\$${amount.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold)),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 18, color: color),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '\$${amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              color: color,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),

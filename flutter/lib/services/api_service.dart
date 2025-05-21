@@ -4,9 +4,10 @@ import 'package:wallet_watchers_app/models/transaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallet_watchers_app/models/goal.dart';
 import 'package:wallet_watchers_app/models/collaborative_goal.dart';
+import 'package:uuid/uuid.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.8:3000/api';
+  static const String baseUrl = 'http://localhost:3000/api';
   bool _useMock = false; // Toggle this to switch between mock and real API
   String? _userId;
 
@@ -463,16 +464,36 @@ class ApiService {
       throw Exception('User ID not set. Please login first.');
     }
 
-    final categoryName = transaction.category.toString().split('.').last;
-    final expenseName = transaction.description?.trim().isNotEmpty == true
-        ? transaction.description!
-        : "Unnamed";
+    bool isUpdate = false;
+
+    if (_useMock) {
+      await Future.delayed(const Duration(seconds: 1));
+      final mockResponse = {
+        'userId': _userId,
+        'expenseAmount': transaction.amount,
+        'expenseName': transaction.expenseName.isNotEmpty ? transaction.expenseName : 'Unnamed',
+        'categoryName': transaction.category.toString().split('.').last,
+      };
+      print('🧪 Mock API: Transaction added successfully');
+      print('🧾 Response: ${jsonEncode(mockResponse)}');
+      return mockResponse;
+    }
 
     try {
-      // Step 1: Save expense
+      final categoryName = transaction.category.toString().split('.').last;
+      final expenseName = transaction.expenseName.trim().isNotEmpty
+          ? transaction.expenseName
+          : "Unnamed";
+
+      // Determine if this is an update or new expense
+      isUpdate = transaction.id.isNotEmpty && transaction.id != const Uuid().v4();
+      final endpoint = isUpdate ? 'updateExpense' : 'postExpenses';
+      final method = isUpdate ? 'PUT' : 'POST';
+
+      // Step 1: Save/Update expense
       final saveResponse = await http
           .post(
-            Uri.parse('$baseUrl/expenses/postExpenses'),
+            Uri.parse('$baseUrl/expenses/$endpoint'),
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $_userId',
@@ -482,45 +503,177 @@ class ApiService {
               'expenseName': expenseName,
               'expenseAmount': transaction.amount,
               'categoryName': categoryName,
+              if (isUpdate) 'id': transaction.id,
             }),
           )
           .timeout(const Duration(seconds: 10));
 
-      if (saveResponse.statusCode != 201) {
-        print("❌ Failed to save expense: ${saveResponse.statusCode}");
-        throw Exception('Expense failed: ${saveResponse.statusCode}');
+      if (saveResponse.statusCode != 201 && saveResponse.statusCode != 200) {
+        print("❌ Failed to ${isUpdate ? 'update' : 'save'} expense: ${saveResponse.statusCode}");
+        throw Exception('Expense ${isUpdate ? 'update' : 'addition'} failed: ${saveResponse.statusCode}');
       }
 
       final savedExpense = jsonDecode(saveResponse.body);
-      print("✅ Expense saved: $savedExpense");
+      print("✅ Expense ${isUpdate ? 'updated' : 'saved'}: $savedExpense");
 
-      // Step 2: Deduct from AI budget
-      final deductResponse = await http
-          .post(
-            Uri.parse('$baseUrl/ai/deductExpense'),
+      // Step 2: Deduct from AI budget (only for new expenses)
+      if (!isUpdate) {
+        final deductResponse = await http
+            .post(
+              Uri.parse('$baseUrl/ai/deductExpense'),
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $_userId',
+              },
+              body: jsonEncode({
+                'userId': _userId,
+                'categoryName': categoryName,
+                'expenseAmount': transaction.amount,
+              }),
+            )
+            .timeout(const Duration(seconds: 10));
+
+        if (deductResponse.statusCode == 200) {
+          final updatedBudget = jsonDecode(deductResponse.body);
+          print("✅ Budget updated: $updatedBudget");
+        } else {
+          print("⚠️ Failed to deduct from AI budget: ${deductResponse.statusCode}");
+        }
+      }
+
+      return savedExpense;
+    } catch (e) {
+      print('❌ Exception while ${isUpdate ? 'updating' : 'adding'} transaction: $e');
+      print('📦 Transaction details: ${jsonEncode(transaction.toJson())}');
+      rethrow;
+    }
+  }
+
+  Future<List<Transaction>> getExpensesByDate(String userId, DateTime date) async {
+    if (_useMock) {
+      await Future.delayed(const Duration(seconds: 1));
+      return [
+        Transaction(
+          id: '1',
+          amount: 50.0,
+          expenseName: 'Mock Transaction 1',
+          category: TransactionCategory.Food,
+          type: TransactionType.expense,
+          date: date,
+        ),
+        Transaction(
+          id: '2',
+          amount: 75.0,
+          expenseName: 'Mock Transaction 2',
+          category: TransactionCategory.shopping,
+          type: TransactionType.expense,
+          date: date,
+        ),
+      ];
+    }
+
+    try {
+      final dateStr = date.toIso8601String().split('T')[0];
+      final response = await http.get(
+        Uri.parse('$baseUrl/expenses/getExpensesByDate?userId=$userId&date=$dateStr'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $userId',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((json) => Transaction.fromJson(json, TransactionType.expense)).toList();
+      } else {
+        throw Exception('Failed to fetch expenses: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching expenses: $e');
+    }
+  }
+
+  Future<void> deleteExpense(String userId, String expenseName) async {
+    if (_useMock) {
+      await Future.delayed(const Duration(seconds: 1));
+      print('🧪 Mock API: Expense deleted successfully');
+      return;
+    }
+
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/expenses/deleteExpense?userId=$userId&expenseName=$expenseName'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $userId',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete expense: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Exception while deleting expense: $e');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> updateExpense(Transaction transaction) async {
+    if (_userId == null || _userId!.isEmpty) {
+      await _loadUserId();
+    }
+
+    if (_userId == null || _userId!.isEmpty) {
+      throw Exception('User ID not set. Please login first.');
+    }
+
+    if (_useMock) {
+      await Future.delayed(const Duration(seconds: 1));
+      final mockResponse = {
+        'userId': _userId,
+        'expenseAmount': transaction.amount,
+        'expenseName': transaction.expenseName.isNotEmpty ? transaction.expenseName : 'Unnamed',
+        'categoryName': transaction.category.toString().split('.').last,
+      };
+      print('🧪 Mock API: Transaction updated successfully');
+      print('🧾 Response: ${jsonEncode(mockResponse)}');
+      return mockResponse;
+    }
+
+    try {
+      final categoryName = transaction.category.toString().split('.').last;
+      final expenseName = transaction.expenseName.trim().isNotEmpty
+          ? transaction.expenseName
+          : "Unnamed";
+
+      final response = await http
+          .patch(
+            Uri.parse('$baseUrl/expenses/updateExpense'),
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $_userId',
             },
             body: jsonEncode({
               'userId': _userId,
-              'categoryName': categoryName,
+              'expenseName': expenseName,
               'expenseAmount': transaction.amount,
+              'categoryName': categoryName,
+              'id': transaction.id,
             }),
           )
           .timeout(const Duration(seconds: 10));
 
-      if (deductResponse.statusCode == 200) {
-        final updatedBudget = jsonDecode(deductResponse.body);
-        print("✅ Budget updated: $updatedBudget");
-      } else {
-        print(
-            "⚠️ Failed to deduct from AI budget: ${deductResponse.statusCode}");
+      if (response.statusCode != 200) {
+        print("❌ Failed to update expense: ${response.statusCode}");
+        print("Response body: ${response.body}");
+        throw Exception('Expense update failed: ${response.statusCode}');
       }
 
-      return savedExpense;
+      final updatedExpense = jsonDecode(response.body);
+      print("✅ Expense updated: $updatedExpense");
+      return updatedExpense;
     } catch (e) {
-      print('❌ Exception while adding transaction: $e');
+      print('❌ Exception while updating transaction: $e');
       print('📦 Transaction details: ${jsonEncode(transaction.toJson())}');
       rethrow;
     }
