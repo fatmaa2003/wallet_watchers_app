@@ -13,21 +13,23 @@ const postAllExpenses = async (req, res) => {
 };
 
 const postExpenses = async (req, res) => {
-  const { userId, expenseAmount, categoryName } = req.body;
+  const { userId,expenseName, expenseAmount, categoryName } = req.body;
 
   console.log(
     "in controller post expenses",
     userId,
+    expenseName, 
     expenseAmount,
     categoryName
   );
 
-  if (!userId || !expenseAmount || !categoryName) {
+  if (!userId ||!expenseName || !expenseAmount || !categoryName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
   const expense = await ExpensesService.postExpenses({
     userId,
+    expenseName,
     expenseAmount,
     categoryName,
   });
@@ -35,6 +37,16 @@ const postExpenses = async (req, res) => {
   res.status(201).json(expense);
 };
 
+const getExpensesByDate = async ( req, res)=>{
+  const {userId , date }= req.query;
+  console.log("in controller get expenses by date", userId, date);
+  if (!userId || !date) {
+    return res.status(400).json({ error: "Missing required fields in expenses controller" });
+  }
+  const expenses = await ExpensesService.getExpensesByDate(userId, date);
+  return res.status(200).json(expenses);
+}
 
-module.exports = { postAllExpenses, postExpenses };
+
+module.exports = { postAllExpenses, postExpenses, getExpensesByDate };
 

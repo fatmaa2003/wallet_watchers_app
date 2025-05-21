@@ -17,7 +17,32 @@ const postAllExpenses = async (userId) => {
   }
 };
 
-const postExpenses = async ({ userId, expenseAmount, categoryName }) => {
+const getExpensesByDate = async (userId, date) => {
+  try {
+    if (!userId || !date) {
+      console.log("missing query params");
+      return [];
+    }
+
+    const start = new Date(date + "T00:00:00.000Z");
+    const end = new Date(date + "T23:59:59.999Z");
+
+    const expenses = await Expenses.find({
+      userId,
+      createdAt: { $gte: start, $lte: end }
+    });
+
+    if (!expenses) {
+      console.log("no expenses found by that date");
+      return [];
+    }
+    return expenses;
+  } catch (err) {
+    console.log("found an erro in getExpensesByDateRepo", err);
+  }
+};
+
+const postExpenses = async ({ userId, expenseName , expenseAmount, categoryName }) => {
   try {
     const user = await User.findById(userId);
     if (!user) {
@@ -36,6 +61,7 @@ const postExpenses = async ({ userId, expenseAmount, categoryName }) => {
 
     const newExpense = new Expenses({
       userId,
+      expenseName,
       expenseAmount,
       categoryName,
     });
@@ -90,4 +116,5 @@ const postExpenses = async ({ userId, expenseAmount, categoryName }) => {
 module.exports = {
   postAllExpenses,
   postExpenses,
+  getExpensesByDate,
 };
