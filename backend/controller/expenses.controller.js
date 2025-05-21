@@ -13,21 +13,23 @@ const postAllExpenses = async (req, res) => {
 };
 
 const postExpenses = async (req, res) => {
-  const { userId, expenseAmount, categoryName } = req.body;
+  const { userId,expenseName, expenseAmount, categoryName } = req.body;
 
   console.log(
     "in controller post expenses",
     userId,
+    expenseName, 
     expenseAmount,
     categoryName
   );
 
-  if (!userId || !expenseAmount || !categoryName) {
+  if (!userId ||!expenseName || !expenseAmount || !categoryName) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
   const expense = await ExpensesService.postExpenses({
     userId,
+    expenseName,
     expenseAmount,
     categoryName,
   });

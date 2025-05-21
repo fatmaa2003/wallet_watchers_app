@@ -5,18 +5,19 @@ const postAllExpenses = async (userId) => {
   return expenses;
 };
 
-const postExpenses = async ({ userId, expenseAmount, categoryName }) => {
+const postExpenses = async ({ userId, expenseName, expenseAmount, categoryName }) => {
 
 
-  console.log("in expenses service",expenseAmount, categoryName);
+  console.log("in expenses service",expenseName, expenseAmount, categoryName);
 
- if (!userId || !expenseAmount || !categoryName) {
+ if (!userId ||!expenseName || !expenseAmount || !categoryName) {
     console.error(" Missing required fields in service");
     return null;
   }
 
   const expenses = await ExpensesRepository.postExpenses({
     userId,
+    expenseName,
     expenseAmount,
     categoryName,
   });
