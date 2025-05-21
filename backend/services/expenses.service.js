@@ -5,12 +5,27 @@ const postAllExpenses = async (userId) => {
   return expenses;
 };
 
-const postExpenses = async ({ userId, expenseName, expenseAmount, categoryName }) => {
+const deleteExpense = async (userId, expenseName) => {
+  if (!userId || !expenseName) {
+    console.error(" Missing required fields in service");
+    return null;
+  }
+  const deletedExpense = await ExpensesRepository.deleteExpense(
+    userId,
+    expenseName
+  );
+  return deletedExpense;
+};
 
+const postExpenses = async ({
+  userId,
+  expenseName,
+  expenseAmount,
+  categoryName,
+}) => {
+  console.log("in expenses service", expenseName, expenseAmount, categoryName);
 
-  console.log("in expenses service",expenseName, expenseAmount, categoryName);
-
- if (!userId ||!expenseName || !expenseAmount || !categoryName) {
+  if (!userId || !expenseName || !expenseAmount || !categoryName) {
     console.error(" Missing required fields in service");
     return null;
   }
@@ -25,7 +40,7 @@ const postExpenses = async ({ userId, expenseName, expenseAmount, categoryName }
   return expenses;
 };
 
-const getExpensesByDate = async (userId , date)=>{
+const getExpensesByDate = async (userId, date) => {
   if (!userId || !date) {
     console.error(" Missing required fields in service");
     return null;
@@ -33,12 +48,11 @@ const getExpensesByDate = async (userId , date)=>{
 
   const expenses = await ExpensesRepository.getExpensesByDate(userId, date);
   return expenses;
-}
+};
 
 module.exports = {
   postAllExpenses,
   postExpenses,
   getExpensesByDate,
-
+  deleteExpense,
 };
-
