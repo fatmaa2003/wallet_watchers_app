@@ -35,6 +35,16 @@ const postExpenses = async (req, res) => {
   res.status(201).json(expense);
 };
 
+const getExpensesByDate = async ( req, res)=>{
+  const {userId , date }= req.query;
+  console.log("in controller get expenses by date", userId, date);
+  if (!userId || !date) {
+    return res.status(400).json({ error: "Missing required fields in expenses controller" });
+  }
+  const expenses = await ExpensesService.getExpensesByDate(userId, date);
+  return res.status(200).json(expenses);
+}
 
-module.exports = { postAllExpenses, postExpenses };
+
+module.exports = { postAllExpenses, postExpenses, getExpensesByDate };
 

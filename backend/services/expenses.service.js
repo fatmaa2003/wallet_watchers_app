@@ -24,9 +24,20 @@ const postExpenses = async ({ userId, expenseAmount, categoryName }) => {
   return expenses;
 };
 
+const getExpensesByDate = async (userId , date)=>{
+  if (!userId || !date) {
+    console.error(" Missing required fields in service");
+    return null;
+  }
+
+  const expenses = await ExpensesRepository.getExpensesByDate(userId, date);
+  return expenses;
+}
+
 module.exports = {
   postAllExpenses,
   postExpenses,
+  getExpensesByDate,
 
 };
 
