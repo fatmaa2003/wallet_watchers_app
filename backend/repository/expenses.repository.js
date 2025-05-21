@@ -29,7 +29,7 @@ const getExpensesByDate = async (userId, date) => {
 
     const expenses = await Expenses.find({
       userId,
-      createdAt: { $gte: start, $lte: end }
+      createdAt: { $gte: start, $lte: end },
     });
 
     if (!expenses) {
@@ -41,8 +41,32 @@ const getExpensesByDate = async (userId, date) => {
     console.log("found an erro in getExpensesByDateRepo", err);
   }
 };
+const deleteExpense = async (userId, expenseName) => {
+  if (!userId || !expenseName) {
+    console.log("missing query params");
+    return [];
+  }
 
-const postExpenses = async ({ userId, expenseName , expenseAmount, categoryName }) => {
+  const normalizedExpenseName = expenseName.trim().replace(/\s+/g, " ");
+  const regex = new RegExp(`^${normalizedExpenseName}$`, "i");
+
+  const deletedExpense = await Expenses.findOneAndDelete({
+    userId,
+    expenseName: regex,
+  });
+  if (!deletedExpense) {
+    console.log("no expenses found by that name");
+    return [];
+  }
+  return deletedExpense;
+};
+
+const postExpenses = async ({
+  userId,
+  expenseName,
+  expenseAmount,
+  categoryName,
+}) => {
   try {
     const user = await User.findById(userId);
     if (!user) {
@@ -117,4 +141,5 @@ module.exports = {
   postAllExpenses,
   postExpenses,
   getExpensesByDate,
+  deleteExpense,
 };

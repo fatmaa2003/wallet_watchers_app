@@ -9,6 +9,7 @@ const expensesSchema = new Schema(
     expenseName: {
       type: String,
       required: true,
+      Uint16Array,
     },
     expenseAmount: {
       type: Number,
