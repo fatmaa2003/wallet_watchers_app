@@ -463,29 +463,14 @@ class ApiService {
       throw Exception('User ID not set. Please login first.');
     }
 
-    if (_useMock) {
-      await Future.delayed(const Duration(seconds: 1));
-      final mockResponse = {
-        'userId': _userId,
-        'expenseAmount': transaction.amount,
-        'expenseName': transaction.description ?? 'Unnamed',
-        'categoryName': transaction.category.toString().split('.').last,
-      };
-      print('🧪 Mock API: Transaction added successfully');
-      print('🧾 Response: ${jsonEncode(mockResponse)}');
-      return mockResponse;
-    }
+    final categoryName = transaction.category.toString().split('.').last;
+    final expenseName = transaction.description?.trim().isNotEmpty == true
+        ? transaction.description!
+        : "Unnamed";
 
     try {
-      final categoryName = transaction.category.toString().split('.').last;
-      final expenseName = transaction.description?.trim().isNotEmpty == true
-          ? transaction.description!
-          : "Unnamed";
-
-      print(
-          "📤 Sending expense: amount=${transaction.amount}, name=$expenseName, category=$categoryName");
-
-      final response = await http
+      // Step 1: Save expense
+      final saveResponse = await http
           .post(
             Uri.parse('$baseUrl/expenses/postExpenses'),
             headers: {
@@ -501,15 +486,39 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 201) {
-        final decoded = jsonDecode(response.body);
-        print("✅ Expense saved and budget updated: $decoded");
-        return decoded;
+      if (saveResponse.statusCode != 201) {
+        print("❌ Failed to save expense: ${saveResponse.statusCode}");
+        throw Exception('Expense failed: ${saveResponse.statusCode}');
+      }
+
+      final savedExpense = jsonDecode(saveResponse.body);
+      print("✅ Expense saved: $savedExpense");
+
+      // Step 2: Deduct from AI budget
+      final deductResponse = await http
+          .post(
+            Uri.parse('$baseUrl/ai/deductExpense'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $_userId',
+            },
+            body: jsonEncode({
+              'userId': _userId,
+              'categoryName': categoryName,
+              'expenseAmount': transaction.amount,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (deductResponse.statusCode == 200) {
+        final updatedBudget = jsonDecode(deductResponse.body);
+        print("✅ Budget updated: $updatedBudget");
       } else {
         print(
-            "❌ Failed to save expense: ${response.statusCode} ${response.body}");
-        throw Exception('Transaction failed: ${response.statusCode}');
+            "⚠️ Failed to deduct from AI budget: ${deductResponse.statusCode}");
       }
+
+      return savedExpense;
     } catch (e) {
       print('❌ Exception while adding transaction: $e');
       print('📦 Transaction details: ${jsonEncode(transaction.toJson())}');
