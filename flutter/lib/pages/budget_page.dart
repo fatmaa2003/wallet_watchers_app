@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:wallet_watchers_app/services/budget_ai_service.dart';
 import 'package:wallet_watchers_app/nav/bottom_nav_bar.dart';
 import 'package:wallet_watchers_app/models/user.dart';
@@ -25,7 +26,6 @@ class _BudgetPageState extends State<BudgetPage> {
 
   Future<void> _fetchLatestBudgetOnLoad() async {
     setState(() => _isLoading = true);
-
     try {
       final service = BudgetService();
       final budgets = await service.fetchSavedBudgets();
@@ -33,9 +33,6 @@ class _BudgetPageState extends State<BudgetPage> {
         setState(() {
           _budgetData = budgets.first;
         });
-        print("📦 Loaded saved budget on load: ${budgets.first}");
-      } else {
-        print("❗ No saved budgets found for this user.");
       }
     } catch (e) {
       debugPrint("❌ Failed to load saved budget: $e");
@@ -53,38 +50,27 @@ class _BudgetPageState extends State<BudgetPage> {
     try {
       final service = BudgetService();
       final result = await service.generateBudget();
-
-      print("🧠 Backend result: $result");
-
       final message = result['message'] ?? 'Budget processed.';
       final budget = result['budget'];
 
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(message)));
 
-      // ✅ Only update budgetData if a valid budget is returned
       if (budget != null &&
           budget['total'] != null &&
-          budget['byCategory'] != null &&
           budget['byCategory'] is List) {
-        print("💾 Updating displayed budget");
         setState(() {
           _budgetData = budget;
         });
-      } else {
-        print("✅ Message shown, keeping existing budget on screen");
-        // Don't clear the UI — retain the previous _budgetData
       }
 
-      // ✅ Optional: Show AI alert if enough history exists
       if ((budget?['historyLength'] ?? 0) >= 3) {
         showDialog(
           context: context,
           builder: (_) => AlertDialog(
             title: const Text("📊 Data Insight"),
             content: const Text(
-              "You have at least 3 months of historical data. This helps AI improve its predictions.",
-            ),
+                "You have at least 3 months of historical data. This helps AI improve its predictions."),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -95,7 +81,6 @@ class _BudgetPageState extends State<BudgetPage> {
         );
       }
     } catch (e) {
-      print("❌ Exception in _generateBudget: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("❌ Error: $e")),
       );
@@ -105,8 +90,6 @@ class _BudgetPageState extends State<BudgetPage> {
   }
 
   Widget _buildBudgetList() {
-    print("📦 Rendering budget data: $_budgetData");
-
     if (_budgetData == null) {
       return const Center(
         child: Text("No budget data available. Click the button to generate."),
@@ -116,13 +99,18 @@ class _BudgetPageState extends State<BudgetPage> {
     final categoryList = (_budgetData!['byCategory'] as List?) ?? [];
     final total = _budgetData!['total'] ?? 0.0;
     final predictedMonth = _budgetData!['predictedMonth'] ?? '';
+    final currentMonthFormatted =
+        DateFormat('MMMM yyyy').format(DateTime.now());
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "AI Predicted Budget for $predictedMonth",
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          "AI Predicted Budget for $currentMonthFormatted  $predictedMonth",
+          style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.blueAccent),
         ),
         const SizedBox(height: 12),
         Text(
@@ -139,10 +127,15 @@ class _BudgetPageState extends State<BudgetPage> {
           final cat = item['category'] ?? 'Unknown';
           final amt = item['amount'] ?? 0.0;
           return Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 2,
+            margin: const EdgeInsets.symmetric(vertical: 6),
             child: ListTile(
-              leading: const Icon(Icons.category),
-              title: Text(cat),
+              leading:
+                  const Icon(Icons.pie_chart_outline, color: Colors.blueAccent),
+              title: Text(cat,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
               trailing: Text('\$${amt.toStringAsFixed(2)}'),
             ),
           );
@@ -154,8 +147,10 @@ class _BudgetPageState extends State<BudgetPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blue[50],
       appBar: AppBar(
         title: const Text("AI Budget Prediction"),
+        backgroundColor: Colors.lightBlueAccent,
       ),
       bottomNavigationBar: BottomNavBar(
         selectedIndex: 2,
@@ -167,19 +162,23 @@ class _BudgetPageState extends State<BudgetPage> {
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     ElevatedButton.icon(
                       icon: const Icon(Icons.smart_toy_outlined),
                       label: const Text("Generate Budget for Next Month"),
                       onPressed: _generateBudget,
                       style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.lightBlueAccent,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
+                            horizontal: 20, vertical: 14),
+                        textStyle: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     _buildBudgetList(),
                   ],
                 ),

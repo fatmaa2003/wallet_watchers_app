@@ -7,7 +7,7 @@ import 'package:wallet_watchers_app/models/collaborative_goal.dart';
 import 'package:uuid/uuid.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'http://192.168.1.8:3000/api';
   bool _useMock = false; // Toggle this to switch between mock and real API
   String? _userId;
 
@@ -469,7 +469,9 @@ class ApiService {
       final mockResponse = {
         'userId': _userId,
         'expenseAmount': transaction.amount,
-        'expenseName': transaction.expenseName.isNotEmpty ? transaction.expenseName : 'Unnamed',
+        'expenseName': transaction.expenseName.isNotEmpty
+            ? transaction.expenseName
+            : 'Unnamed',
         'categoryName': transaction.category.toString().split('.').last,
       };
       print('🧪 Mock API: Transaction added successfully');
@@ -508,7 +510,8 @@ class ApiService {
       print('Response body: ${saveResponse.body}');
 
       if (saveResponse.statusCode != 201) {
-        throw Exception('Expense addition failed: ${saveResponse.statusCode} - ${saveResponse.body}');
+        throw Exception(
+            'Expense addition failed: ${saveResponse.statusCode} - ${saveResponse.body}');
       }
 
       final savedExpense = jsonDecode(saveResponse.body);
@@ -534,7 +537,8 @@ class ApiService {
           final updatedBudget = jsonDecode(deductResponse.body);
           print("✅ Budget updated: $updatedBudget");
         } else {
-          print("⚠️ Failed to deduct from AI budget: ${deductResponse.statusCode}");
+          print(
+              "⚠️ Failed to deduct from AI budget: ${deductResponse.statusCode}");
         }
       } catch (e) {
         print("⚠️ Error deducting from AI budget: $e");
@@ -549,7 +553,8 @@ class ApiService {
     }
   }
 
-  Future<List<Transaction>> getExpensesByDate(String userId, DateTime date) async {
+  Future<List<Transaction>> getExpensesByDate(
+      String userId, DateTime date) async {
     if (_useMock) {
       await Future.delayed(const Duration(seconds: 1));
       return [
@@ -575,7 +580,8 @@ class ApiService {
     try {
       final dateStr = date.toIso8601String().split('T')[0];
       final response = await http.get(
-        Uri.parse('$baseUrl/expenses/getExpensesByDate?userId=$userId&date=$dateStr'),
+        Uri.parse(
+            '$baseUrl/expenses/getExpensesByDate?userId=$userId&date=$dateStr'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $userId',
@@ -584,7 +590,9 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        return data.map((json) => Transaction.fromJson(json, TransactionType.expense)).toList();
+        return data
+            .map((json) => Transaction.fromJson(json, TransactionType.expense))
+            .toList();
       } else {
         throw Exception('Failed to fetch expenses: ${response.statusCode}');
       }
@@ -602,7 +610,8 @@ class ApiService {
 
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/expenses/deleteExpense?userId=$userId&expenseName=$expenseName'),
+        Uri.parse(
+            '$baseUrl/expenses/deleteExpense?userId=$userId&expenseName=$expenseName'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $userId',
@@ -632,7 +641,9 @@ class ApiService {
       final mockResponse = {
         'userId': _userId,
         'expenseAmount': transaction.amount,
-        'expenseName': transaction.expenseName.isNotEmpty ? transaction.expenseName : 'Unnamed',
+        'expenseName': transaction.expenseName.isNotEmpty
+            ? transaction.expenseName
+            : 'Unnamed',
         'categoryName': transaction.category.toString().split('.').last,
       };
       print('🧪 Mock API: Transaction updated successfully');
@@ -668,7 +679,8 @@ class ApiService {
       print('Response body: ${response.body}');
 
       if (response.statusCode != 200) {
-        throw Exception('Expense update failed: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'Expense update failed: ${response.statusCode} - ${response.body}');
       }
 
       final updatedExpense = jsonDecode(response.body);

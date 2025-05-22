@@ -15,8 +15,8 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
   String? _currentUserId;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _loadGoals();
   }
 
@@ -35,24 +35,45 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Text("New Collaborative Goal"),
+        backgroundColor: Colors.blue[50],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("New Collaborative Goal",
+            style: TextStyle(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(labelText: "Goal Title"),
+              decoration: const InputDecoration(
+                labelText: "Goal Title",
+                border: OutlineInputBorder(),
+              ),
             ),
+            const SizedBox(height: 10),
             TextField(
               controller: amountController,
-              decoration: const InputDecoration(labelText: "Amount per User"),
+              decoration: const InputDecoration(
+                labelText: "Amount per User",
+                border: OutlineInputBorder(),
+              ),
               keyboardType: TextInputType.number,
             ),
           ],
         ),
         actions: [
-          TextButton(
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.lightBlueAccent,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              textStyle:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            icon: const Icon(Icons.add),
+            label: const Text("Create Goal"),
             onPressed: () async {
               final title = titleController.text.trim();
               final amount = double.tryParse(amountController.text.trim()) ?? 0;
@@ -62,7 +83,6 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
                 Navigator.pop(context);
               }
             },
-            child: const Text("Add"),
           ),
         ],
       ),
@@ -83,8 +103,9 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 4,
+      color: Colors.blue[50],
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -92,40 +113,66 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
           children: [
             Row(
               children: [
-                const Icon(Icons.flag, color: Colors.blueAccent),
+                const Icon(Icons.flag, color: Colors.blue),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     goal.title,
                     style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
-            ...goal.participants.map((p) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                        "${p.name}: ${p.savedAmount.toStringAsFixed(2)} / ${goal.totalTargetPerUser} (${p.status})"),
-                    LinearProgressIndicator(
-                      value: (p.savedAmount / goal.totalTargetPerUser)
-                          .clamp(0.0, 1.0),
-                      minHeight: 8,
-                      backgroundColor: Colors.grey[200],
-                      color: Colors.green,
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                )),
-            const Divider(),
+            ...goal.participants
+                .where((p) => p.status == 'accepted')
+                .map((p) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "${p.name}: ${p.savedAmount.toStringAsFixed(2)} / ${goal.totalTargetPerUser}",
+                          style: const TextStyle(color: Colors.black87),
+                        ),
+                        LinearProgressIndicator(
+                          value: (p.savedAmount / goal.totalTargetPerUser)
+                              .clamp(0.0, 1.0),
+                          minHeight: 8,
+                          backgroundColor: Colors.grey[300],
+                          color: Colors.lightBlueAccent,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    )),
+            if (isCreator)
+              ...goal.participants
+                  .where((p) =>
+                      p.status == 'accepted' && p.userId != _currentUserId)
+                  .map((p) => Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(p.name,
+                              style: const TextStyle(color: Colors.black87)),
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle,
+                                color: Colors.red),
+                            onPressed: () async {
+                              await _apiService.removeFriend(goal.id, p.userId);
+                              _loadGoals();
+                            },
+                          )
+                        ],
+                      )),
+            const Divider(color: Colors.black26),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 if (isCreator)
                   TextButton.icon(
-                    icon: const Icon(Icons.group_add),
+                    icon: const Icon(Icons.group_add, color: Colors.blue),
                     label: const Text("Add Friend"),
                     onPressed: () => _showAddFriendDialog(goal.id),
                   ),
@@ -141,7 +188,7 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
                   ),
                 if (!isCreator)
                   TextButton.icon(
-                    icon: const Icon(Icons.exit_to_app),
+                    icon: const Icon(Icons.exit_to_app, color: Colors.blue),
                     label: const Text("Leave Goal"),
                     onPressed: () async {
                       await _apiService.leaveGoal(goal.id);
@@ -152,7 +199,10 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
             ),
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton.icon(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.lightBlueAccent,
+                ),
                 icon: const Icon(Icons.edit),
                 label: const Text("Update My Amount"),
                 onPressed: () => _showUpdateContributionDialog(
@@ -171,14 +221,21 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        backgroundColor: Colors.blue[50],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text("Invite Friend"),
         content: TextField(
           controller: emailController,
-          decoration: const InputDecoration(labelText: "Friend's Email"),
+          decoration: const InputDecoration(
+            labelText: "Friend's Email",
+            border: OutlineInputBorder(),
+          ),
         ),
         actions: [
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.lightBlueAccent,
+            ),
             onPressed: () async {
               final email = emailController.text.trim();
               if (email.isNotEmpty) {
@@ -201,14 +258,21 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        backgroundColor: Colors.blue[50],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text("Update Your Contribution"),
         content: TextField(
           controller: amountController,
           keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+          ),
         ),
         actions: [
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.lightBlueAccent,
+            ),
             onPressed: () async {
               final amount =
                   double.tryParse(amountController.text.trim()) ?? current;
@@ -226,13 +290,10 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blue[50],
       appBar: AppBar(
         title: const Text("Collaborative Goals"),
-        backgroundColor: Colors.blueAccent,
-        actions: [
-          IconButton(
-              icon: const Icon(Icons.add), onPressed: _showAddGoalDialog),
-        ],
+        backgroundColor: Colors.lightBlueAccent,
       ),
       body: FutureBuilder<List<CollaborativeGoal>>(
         future: _goalsFuture,
@@ -249,6 +310,12 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
           }
           return ListView(children: goals.map(_buildGoalCard).toList());
         },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showAddGoalDialog,
+        backgroundColor: Colors.lightBlueAccent,
+        icon: const Icon(Icons.add),
+        label: const Text("New Collaborative Goal"),
       ),
     );
   }

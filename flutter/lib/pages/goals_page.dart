@@ -36,23 +36,36 @@ class _GoalsPageState extends State<GoalsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.blue[50],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Add Goal'),
         content: SingleChildScrollView(
           child: Column(
             children: [
               TextField(
                 controller: titleController,
-                decoration: const InputDecoration(labelText: 'Goal Title'),
+                decoration: const InputDecoration(
+                  labelText: 'Goal Title',
+                  border: OutlineInputBorder(),
+                ),
               ),
+              const SizedBox(height: 10),
               TextField(
                 controller: savedController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Saved Amount'),
+                decoration: const InputDecoration(
+                  labelText: 'Saved Amount',
+                  border: OutlineInputBorder(),
+                ),
               ),
+              const SizedBox(height: 10),
               TextField(
                 controller: targetController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Target Amount'),
+                decoration: const InputDecoration(
+                  labelText: 'Target Amount',
+                  border: OutlineInputBorder(),
+                ),
               ),
             ],
           ),
@@ -62,7 +75,11 @@ class _GoalsPageState extends State<GoalsPage> {
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
+          ElevatedButton.icon(
+            icon: const Icon(Icons.flag),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.lightBlueAccent,
+            ),
             onPressed: () async {
               final goal = Goal(
                 id: '',
@@ -70,7 +87,7 @@ class _GoalsPageState extends State<GoalsPage> {
                 icon: 'flag',
                 savedAmount: double.tryParse(savedController.text.trim()) ?? 0,
                 targetAmount:
-                double.tryParse(targetController.text.trim()) ?? 0,
+                    double.tryParse(targetController.text.trim()) ?? 0,
                 isAchieved: false,
               );
 
@@ -85,7 +102,7 @@ class _GoalsPageState extends State<GoalsPage> {
                 );
               }
             },
-            child: const Text('Add'),
+            label: const Text('Add'),
           ),
         ],
       ),
@@ -94,16 +111,21 @@ class _GoalsPageState extends State<GoalsPage> {
 
   void _showEditSavedDialog(Goal goal) {
     final savedController =
-    TextEditingController(text: goal.savedAmount.toString());
+        TextEditingController(text: goal.savedAmount.toString());
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.blue[50],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('Update Saved Amount - ${goal.title}'),
         content: TextField(
           controller: savedController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'New Saved Amount'),
+          decoration: const InputDecoration(
+            labelText: 'New Saved Amount',
+            border: OutlineInputBorder(),
+          ),
         ),
         actions: [
           TextButton(
@@ -111,6 +133,7 @@ class _GoalsPageState extends State<GoalsPage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
             onPressed: () async {
               final updatedGoal = goal.copyWith(
                 savedAmount: double.tryParse(savedController.text.trim()) ??
@@ -132,16 +155,15 @@ class _GoalsPageState extends State<GoalsPage> {
     final left = goal.targetAmount - goal.savedAmount;
 
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      elevation: 4,
+      color: Colors.blue[50],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(Icons.flag, size: 40, color: Colors.blue[600]),
+            Icon(Icons.flag, size: 40, color: Colors.blueAccent),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -150,12 +172,15 @@ class _GoalsPageState extends State<GoalsPage> {
                   Text(
                     goal.title,
                     style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
-                  LinearProgressIndicator(value: percent.clamp(0.0, 1.0)),
+                  LinearProgressIndicator(
+                    value: percent.clamp(0.0, 1.0),
+                    backgroundColor: Colors.grey[300],
+                    color: Colors.lightBlueAccent,
+                    minHeight: 8,
+                  ),
                   const SizedBox(height: 6),
                   Text(
                     "Saved \$${goal.savedAmount.toStringAsFixed(0)} / \$${goal.targetAmount.toStringAsFixed(0)} (${(percent * 100).toStringAsFixed(0)}%)",
@@ -205,8 +230,10 @@ class _GoalsPageState extends State<GoalsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blue[50],
       appBar: AppBar(
         title: const Text("Goals"),
+        backgroundColor: Colors.lightBlueAccent,
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -259,9 +286,11 @@ class _GoalsPageState extends State<GoalsPage> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Colors.lightBlueAccent,
         onPressed: _showAddGoalDialog,
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text("New Goal"),
       ),
     );
   }
