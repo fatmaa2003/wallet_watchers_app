@@ -5,9 +5,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallet_watchers_app/models/goal.dart';
 import 'package:wallet_watchers_app/models/collaborative_goal.dart';
 import 'package:uuid/uuid.dart';
+import 'package:wallet_watchers_app/models/category.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.8:3000/api';
+  static const String baseUrl = 'http://localhost:3000/api';
   bool _useMock = false; // Toggle this to switch between mock and real API
   String? _userId;
 
@@ -472,7 +473,7 @@ class ApiService {
         'expenseName': transaction.expenseName.isNotEmpty
             ? transaction.expenseName
             : 'Unnamed',
-        'categoryName': transaction.category.toString().split('.').last,
+        'categoryName': transaction.category.categoryName,
       };
       print('🧪 Mock API: Transaction added successfully');
       print('🧾 Response: ${jsonEncode(mockResponse)}');
@@ -480,7 +481,7 @@ class ApiService {
     }
 
     try {
-      final categoryName = transaction.category.toString().split('.').last;
+      final categoryName = transaction.category.categoryName;
       final expenseName = transaction.expenseName.trim().isNotEmpty
           ? transaction.expenseName
           : "Unnamed";
@@ -562,7 +563,7 @@ class ApiService {
           id: '1',
           amount: 50.0,
           expenseName: 'Mock Transaction 1',
-          category: TransactionCategory.Food,
+          category: Category(id: '1', categoryName: 'Food'),
           type: TransactionType.expense,
           date: date,
         ),
@@ -570,7 +571,7 @@ class ApiService {
           id: '2',
           amount: 75.0,
           expenseName: 'Mock Transaction 2',
-          category: TransactionCategory.shopping,
+          category: Category(id: '3', categoryName: 'Shopping'),
           type: TransactionType.expense,
           date: date,
         ),
@@ -690,6 +691,43 @@ class ApiService {
       print('❌ Exception while updating transaction: $e');
       print('📦 Transaction details: ${jsonEncode(transaction.toJson())}');
       rethrow;
+    }
+  }
+
+  Future<List<Category>> getAllCategories() async {
+    if (_useMock) {
+      await Future.delayed(const Duration(seconds: 1));
+      return [
+        Category(id: '1', categoryName: 'Food'),
+        Category(id: '2', categoryName: 'Transport'),
+        Category(id: '3', categoryName: 'Shopping'),
+        Category(id: '4', categoryName: 'Bills'),
+        Category(id: '5', categoryName: 'Entertainment'),
+      ];
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/categories/getAllCategories'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((json) => Category.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load categories: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error loading categories: $e');
+      // Return default categories if the API call fails
+      return [
+        Category(id: '1', categoryName: 'Food'),
+        Category(id: '2', categoryName: 'Transport'),
+        Category(id: '3', categoryName: 'Shopping'),
+        Category(id: '4', categoryName: 'Bills'),
+        Category(id: '5', categoryName: 'Entertainment'),
+      ];
     }
   }
 }

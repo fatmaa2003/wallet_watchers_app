@@ -417,7 +417,7 @@ class _MainScreenState extends State<MainScreen> {
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
-                                      t.category.name.toUpperCase(),
+                                      t.category.categoryName.toUpperCase(),
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: t.color,

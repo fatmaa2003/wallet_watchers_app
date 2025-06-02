@@ -1,15 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:wallet_watchers_app/models/category.dart';
 
 enum TransactionType { expense, income }
-
-enum TransactionCategory {
-  Food,
-  Transportation,
-  shopping,
-  bills,
-  entertainment,
-  other
-}
 
 class Transaction {
   final String id;
@@ -17,7 +9,7 @@ class Transaction {
   final String expenseName;
   final DateTime date;
   final TransactionType type;
-  final TransactionCategory category;
+  final Category category;
 
   Transaction({
     required this.id,
@@ -29,21 +21,15 @@ class Transaction {
   });
 
   Color get color => type == TransactionType.income ? Colors.green : Colors.red;
+  
   IconData get icon {
-    switch (category) {
-      case TransactionCategory.Food:
-        return Icons.restaurant;
-      case TransactionCategory.Transportation:
-        return Icons.directions_car;
-      case TransactionCategory.shopping:
-        return Icons.shopping_cart;
-      case TransactionCategory.bills:
-        return Icons.receipt;
-      case TransactionCategory.entertainment:
-        return Icons.movie;
-      case TransactionCategory.other:
-        return Icons.category;
-    }
+    final categoryName = category.categoryName.toLowerCase();
+    if (categoryName.contains('food')) return Icons.restaurant;
+    if (categoryName.contains('transport')) return Icons.directions_car;
+    if (categoryName.contains('shop')) return Icons.shopping_cart;
+    if (categoryName.contains('bill')) return Icons.receipt;
+    if (categoryName.contains('entertain')) return Icons.movie;
+    return Icons.category;
   }
 
   Map<String, dynamic> toJson() {
@@ -53,7 +39,7 @@ class Transaction {
       'expenseName': expenseName,
       'date': date.toIso8601String(),
       'type': type.toString().split('.').last,
-      'category': category.toString().split('.').last,
+      'category': category.toJson(),
     };
   }
 
@@ -64,11 +50,9 @@ class Transaction {
       expenseName: json['expenseName'] ?? json['incomeName'] ?? 'Unnamed',
       date: DateTime.parse(json['date'] ?? json['createdAt'] ?? DateTime.now().toIso8601String()),
       type: type,
-      category: TransactionCategory.values.firstWhere(
-        (e) => e.toString().split('.').last.toLowerCase() ==
-            (json['category'] ?? json['categoryName'] ?? 'other').toString().toLowerCase(),
-        orElse: () => TransactionCategory.other,
-      ),
+      category: json['category'] != null 
+          ? Category.fromJson(json['category'])
+          : Category(id: '', categoryName: json['categoryName'] ?? 'Other'),
     );
   }
 }
