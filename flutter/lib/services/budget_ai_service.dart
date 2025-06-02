@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class BudgetService {
   static const String nodeApiUrl =
-      'http://192.168.1.8:3000/api'; // Update to your actual IP/port
+      'http://localhost:3000/api'; // Update to your actual IP/port
 
   // 🔐 Get stored userId from SharedPreferences
   Future<String> _getUserId() async {

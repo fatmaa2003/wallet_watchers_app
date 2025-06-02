@@ -311,7 +311,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                                             borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: Text(
-                                            transaction.category.name.toUpperCase(),
+                                            transaction.category.categoryName.toUpperCase(),
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: transaction.color,
