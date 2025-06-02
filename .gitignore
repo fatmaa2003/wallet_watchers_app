@@ -2,6 +2,7 @@
 # Node.js Backend ignores
 # ----------------------------
 /backend/node_modules/
+/mockBank/node_modules/
 /backend/.env
 /backend/logs
 /backend/*.log

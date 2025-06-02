@@ -5,6 +5,16 @@ const getAllCategories = async () => {
   return categories;
 };
 
+const postCategory = async (categoryName) => {
+  if (!categoryName || categoryName.trim() === "") {
+    console.error("Invalid category name");
+    return null;
+  }
+
+  return await CategoriesRepository.postCategory(categoryName.trim());
+};
+
 module.exports = {
   getAllCategories,
+  postCategory
 };
