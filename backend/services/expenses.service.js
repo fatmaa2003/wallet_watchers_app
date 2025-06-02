@@ -4,7 +4,7 @@ const postAllExpenses = async (userId) => {
   return await ExpensesRepository.postAllExpenses(userId);
 };
 
-const postExpenses = async ({ userId, expenseName, expenseAmount, categoryName }) => {
+const postExpenses = async ({ userId, expenseName, expenseAmount, categoryName,  isBank ,bankName, cardNumber, accountNumber  }) => {
   console.log("in expenses service", expenseName, expenseAmount, categoryName);
 
   if (!userId || !expenseName || !expenseAmount || !categoryName) {
@@ -12,11 +12,21 @@ const postExpenses = async ({ userId, expenseName, expenseAmount, categoryName }
     return null;
   }
 
+  if (isBank && (!bankName || !cardNumber || !accountNumber)) {
+    console.error("Missing bank details in service");
+    return null;
+  }
+
+
   return await ExpensesRepository.postExpenses({
     userId,
     expenseName,
     expenseAmount,
     categoryName,
+    isBank,
+    bankName,
+    cardNumber,
+    accountNumber
   });
 };
 
