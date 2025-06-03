@@ -167,47 +167,53 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
                         ],
                       )),
             const Divider(color: Colors.black26),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Column(
               children: [
-                if (isCreator)
-                  TextButton.icon(
-                    icon: const Icon(Icons.group_add, color: Colors.blue),
-                    label: const Text("Add Friend"),
-                    onPressed: () => _showAddFriendDialog(goal.id),
-                  ),
-                if (isCreator)
-                  TextButton.icon(
-                    icon: const Icon(Icons.delete_forever, color: Colors.red),
-                    label: const Text("Delete Goal",
-                        style: TextStyle(color: Colors.red)),
-                    onPressed: () async {
-                      await _apiService.deleteCollaborativeGoal(goal.id);
-                      _loadGoals();
-                    },
-                  ),
-                if (!isCreator)
-                  TextButton.icon(
-                    icon: const Icon(Icons.exit_to_app, color: Colors.blue),
-                    label: const Text("Leave Goal"),
-                    onPressed: () async {
-                      await _apiService.leaveGoal(goal.id);
-                      _loadGoals();
-                    },
-                  ),
-              ],
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.lightBlueAccent,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.spaceEvenly,
+                  children: [
+                    TextButton.icon(
+                      icon: const Icon(Icons.group_add, color: Colors.blue),
+                      label: const Text("Add Friend"),
+                      onPressed: () => _showAddFriendDialog(goal.id),
+                    ),
+                    TextButton.icon(
+                      icon: const Icon(Icons.delete_forever, color: Colors.red),
+                      label: const Text("Delete Goal",
+                          style: TextStyle(color: Colors.red)),
+                      onPressed: () async {
+                        await _apiService.deleteCollaborativeGoal(goal.id);
+                        _loadGoals();
+                      },
+                    ),
+                  ],
                 ),
-                icon: const Icon(Icons.edit),
-                label: const Text("Update My Amount"),
-                onPressed: () => _showUpdateContributionDialog(
-                    goal.id, currentUser.savedAmount),
-              ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      icon: const Icon(Icons.exit_to_app, color: Colors.blue),
+                      label: const Text("Leave Goal"),
+                      onPressed: () async {
+                        await _apiService.leaveGoal(goal.id);
+                        _loadGoals();
+                      },
+                    ),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.lightBlueAccent,
+                      ),
+                      icon: const Icon(Icons.edit),
+                      label: const Text("Update My Amount"),
+                      onPressed: () => _showUpdateContributionDialog(
+                          goal.id, currentUser.savedAmount),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),

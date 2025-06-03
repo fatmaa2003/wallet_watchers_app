@@ -106,6 +106,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
   Future<void> _submitExpense() async {
     if (_formKey.currentState!.validate() && _selectedCategory != null) {
       try {
+        setState(() => _isLoading = true);
         final apiService = Provider.of<ApiService>(context, listen: false);
         await apiService.addExpense(
           expenseName: _nameController.text,
@@ -118,13 +119,17 @@ class _AddExpensePageState extends State<AddExpensePage> {
           accountNumber: _isBank ? _accountNumberController.text : null,
         );
         if (mounted) {
-          Navigator.pop(context);
+          Navigator.pop(context, true);
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error adding expense: $e')),
           );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
         }
       }
     }
