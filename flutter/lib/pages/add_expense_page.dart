@@ -28,10 +28,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
   final _dateController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   Category? _selectedCategory;
-  bool _isBank = false;
-  final _bankNameController = TextEditingController();
-  final _cardNumberController = TextEditingController();
-  final _accountNumberController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -52,9 +48,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
     _amountController.dispose();
     _nameController.dispose();
     _dateController.dispose();
-    _bankNameController.dispose();
-    _cardNumberController.dispose();
-    _accountNumberController.dispose();
     super.dispose();
   }
 
@@ -113,10 +106,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
           amount: double.parse(_amountController.text),
           category: _selectedCategory!,
           date: _selectedDate,
-          isBank: _isBank,
-          bankName: _isBank ? _bankNameController.text : null,
-          cardNumber: _isBank ? _formatCardNumber(_cardNumberController.text) : null,
-          accountNumber: _isBank ? _accountNumberController.text : null,
         );
         if (mounted) {
           Navigator.pop(context, true);
@@ -157,188 +146,109 @@ class _AddExpensePageState extends State<AddExpensePage> {
 
   @override
   Widget build(BuildContext context) {
-    final categoriesProvider = Provider.of<CategoriesProvider>(context);
-    final categories = categoriesProvider.categories;
-
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(widget.initialExpense != null ? 'Edit Expense' : 'Add Expense'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0,
       ),
-      body: categoriesProvider.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Expense Name',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter an expense name';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _amountController,
-                        decoration: const InputDecoration(
-                          labelText: 'Amount',
-                          border: OutlineInputBorder(),
-                          prefixText: '\$',
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter an amount';
-                          }
-                          if (double.tryParse(value) == null) {
-                            return 'Please enter a valid number';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<Category>(
-                        value: _selectedCategory,
-                        decoration: const InputDecoration(
-                          labelText: 'Category',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: categories.map((Category category) {
-                          return DropdownMenuItem<Category>(
-                            value: category,
-                            child: Text(category.categoryName),
-                          );
-                        }).toList(),
-                        onChanged: (Category? newValue) {
-                          setState(() {
-                            _selectedCategory = newValue;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Please select a category';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _dateController,
-                        decoration: const InputDecoration(
-                          labelText: 'Date',
-                          border: OutlineInputBorder(),
-                          suffixIcon: Icon(Icons.calendar_today),
-                        ),
-                        readOnly: true,
-                        onTap: () => _selectDate(context),
-                      ),
-                      const SizedBox(height: 16),
-                      SwitchListTile(
-                        title: const Text('Bank Transaction'),
-                        value: _isBank,
-                        onChanged: (bool value) {
-                          setState(() {
-                            _isBank = value;
-                          });
-                        },
-                      ),
-                      if (_isBank) ...[
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _bankNameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Bank Name',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (_isBank && (value == null || value.isEmpty)) {
-                              return 'Please enter a bank name';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _cardNumberController,
-                          decoration: const InputDecoration(
-                            labelText: 'Card Number (XXXX-XXXX-XXXX-XXXX)',
-                            border: OutlineInputBorder(),
-                            hintText: '1234-5678-9876-5432',
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (_isBank && (value == null || value.isEmpty)) {
-                              return 'Please enter a card number';
-                            }
-                            if (_isBank && value != null && value.isNotEmpty) {
-                              // Remove any non-digit characters for validation
-                              String digits = value.replaceAll(RegExp(r'[^\d]'), '');
-                              if (digits.length != 16) {
-                                return 'Card number must be 16 digits';
-                              }
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _accountNumberController,
-                          decoration: const InputDecoration(
-                            labelText: 'Account Number',
-                            border: OutlineInputBorder(),
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (_isBank && (value == null || value.isEmpty)) {
-                              return 'Please enter an account number';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _submitExpense,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
-                              : Text(
-                                  widget.initialExpense != null ? 'Update Expense' : 'Add Expense',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Expense Name',
+                  border: OutlineInputBorder(),
                 ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter an expense name';
+                  }
+                  return null;
+                },
               ),
-            ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _amountController,
+                decoration: const InputDecoration(
+                  labelText: 'Amount',
+                  border: OutlineInputBorder(),
+                  prefixText: '\$',
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter an amount';
+                  }
+                  if (double.tryParse(value) == null) {
+                    return 'Please enter a valid number';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _dateController,
+                decoration: const InputDecoration(
+                  labelText: 'Date',
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.calendar_today),
+                ),
+                readOnly: true,
+                onTap: () => _selectDate(context),
+              ),
+              const SizedBox(height: 16),
+              Consumer<CategoriesProvider>(
+                builder: (context, categoriesProvider, child) {
+                  return DropdownButtonFormField<Category>(
+                    value: _selectedCategory,
+                    decoration: const InputDecoration(
+                      labelText: 'Category',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: categoriesProvider.categories.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Row(
+                          children: [
+                            Icon(
+                              _getCategoryIcon(category.categoryName),
+                              color: _getCategoryColor(category.categoryName),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(category.categoryName),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (Category? newValue) {
+                      setState(() {
+                        _selectedCategory = newValue;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null) {
+                        return 'Please select a category';
+                      }
+                      return null;
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _submitExpense,
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : Text(widget.initialExpense != null ? 'Update Expense' : 'Add Expense'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 } 

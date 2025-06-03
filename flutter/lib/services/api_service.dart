@@ -8,7 +8,7 @@ import 'package:uuid/uuid.dart';
 import 'package:wallet_watchers_app/models/category.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.8:3000/api';
+  static const String baseUrl = 'http://localhost:3000/api';
   bool _useMock = false; // Toggle this to switch between mock and real API
   String? _userId;
 
@@ -740,5 +740,56 @@ class ApiService {
     final invites = await fetchInvites();
     print("Notifications count: ${invites.length}");
     return invites.length;
+  }
+
+  Future<List<Map<String, dynamic>>> getCardsByUserId(String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/cards/getCardsByUserId?userId=$userId'),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load cards');
+      }
+    } catch (e) {
+      throw Exception('Error getting cards: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> postCard(String userId, Map<String, dynamic> cardData) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/cards/postCard'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'userId': userId,
+          'cardData': cardData,
+        }),
+      );
+      if (response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to add card');
+      }
+    } catch (e) {
+      throw Exception('Error adding card: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteCard(String userId, String cardNumber) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/cards/deleteCard?userId=$userId&cardName=$cardNumber'),
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to delete card');
+      }
+    } catch (e) {
+      throw Exception('Error deleting card: $e');
+    }
   }
 }

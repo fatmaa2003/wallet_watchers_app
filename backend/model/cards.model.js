@@ -22,6 +22,10 @@ const cardsSchema = new Schema(
         message: props => `${props.value} is not a valid card number format!`
       }
     },
+    cardHolder: {
+      type: String,
+      required: true
+    },
     expiryDate: {
       type: Date,
       required: true,

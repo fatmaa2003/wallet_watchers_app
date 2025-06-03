@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:wallet_watchers_app/pages/home_page.dart';
 import 'package:wallet_watchers_app/pages/statistics_page.dart';
-import 'package:wallet_watchers_app/pages/budget_page.dart'; // ✅ Import BudgetPage
+import 'package:wallet_watchers_app/pages/budget_page.dart';
+import 'package:wallet_watchers_app/pages/bank_page.dart';
 import 'package:wallet_watchers_app/models/user.dart';
 
 class BottomNavBar extends StatelessWidget {
@@ -22,7 +23,10 @@ class BottomNavBar extends StatelessWidget {
         page = StatisticsPage(user: user);
         break;
       case 2:
-        page = BudgetPage(user: user); // ✅ Add BudgetPage (no user param unless you modify the page)
+        page = BudgetPage(user: user);
+        break;
+      case 3:
+        page = BankPage(user: user);
         break;
       default:
         return;
@@ -39,10 +43,11 @@ class BottomNavBar extends StatelessWidget {
     List<IconData> icons = [
       Icons.home_outlined,
       Icons.bar_chart_outlined,
-      Icons.account_balance_wallet_outlined, // ✅ Budget icon
+      Icons.account_balance_wallet_outlined,
+      Icons.credit_card_outlined,
     ];
 
-    List<String> labels = ['Home', 'Statistics', 'Budget'];
+    List<String> labels = ['Home', 'Statistics', 'Budget', 'Bank'];
 
     return Container(
       height: 65,

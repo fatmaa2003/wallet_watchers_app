@@ -217,12 +217,48 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
                                         ),
                                       ),
                                       const SizedBox(height: 4),
-                                      Text(
-                                        '${transaction.date.day}/${transaction.date.month}/${transaction.date.year}',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey[600],
-                                        ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '${transaction.date.day}/${transaction.date.month}/${transaction.date.year}',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                          if (transaction.isBank) ...[
+                                            const SizedBox(width: 8),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 6,
+                                                vertical: 2,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.account_balance,
+                                                    size: 12,
+                                                    color: Colors.blue[700],
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    'Bank',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.blue[700],
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ],
                                       ),
                                     ],
                                   ),

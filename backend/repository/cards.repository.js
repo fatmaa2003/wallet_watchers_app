@@ -17,6 +17,7 @@ const postCard = async (userId, cardData) => {
       userId,
       cardName: cardData.cardName,
       cardNumber: cardData.cardNumber,
+      cardHolder: cardData.cardHolder,
       expiryDate: cardData.expiryDate,
       cvv: cardData.cvv,
     });
