@@ -4,6 +4,7 @@ import 'package:wallet_watchers_app/pages/goals_page.dart';
 import 'package:wallet_watchers_app/pages/profile_page.dart';
 import 'package:wallet_watchers_app/pages/collaborative_goals_page.dart';
 import 'package:wallet_watchers_app/pages/notifications_page.dart';
+import 'package:wallet_watchers_app/pages/contact_us_page.dart';
 import 'package:wallet_watchers_app/services/api_service.dart';
 
 class CustomMenu extends StatefulWidget {
@@ -125,9 +126,10 @@ class _CustomMenuState extends State<CustomMenu> {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const NotificationsPage()),
+                  builder: (context) => const NotificationsPage(),
+                ),
               );
-              _loadNotificationCount(); // refresh after returning
+              _loadNotificationCount(); // Refresh after returning
             },
           ),
 
@@ -161,13 +163,18 @@ class _CustomMenuState extends State<CustomMenu> {
             },
           ),
 
-          // Contact Us
+          // Contact Us Page
           ListTile(
             leading: const Icon(Icons.contact_support),
             title: const Text('Contact Us'),
             onTap: () {
               Navigator.pop(context);
-              // Future implementation
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ContactUsPage(),
+                ),
+              );
             },
           ),
 
