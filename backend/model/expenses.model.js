@@ -8,7 +8,6 @@ const expensesSchema = new Schema(
     expenseName: {
       type: String,
       required: true,
-      Uint16Array,
     },
     expenseAmount: {
       type: Number,
@@ -37,14 +36,13 @@ const expensesSchema = new Schema(
       default: null,
       validate: {
         validator: function (v) {
-          return /^\d{4}-\d{4}-\d{4}-\d{4}$/.test(v); // Regex to match 1234-5678-9876-5432
+          return v === null || /^\d{4}-\d{4}-\d{4}-\d{4}$/.test(v); // Regex to match 1234-5678-9876-5432
         },
         message: props => `${props.value} is not a valid card number format!`,
       },
-      unique: true,
     },
-    accontNumber: {
-      type: Number,
+    accountNumber: {
+      type: String,
       default: null,
     },
   },

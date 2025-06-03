@@ -75,18 +75,28 @@ const postExpenses = async (req, res) => {
       .status(400)
       .json({ error: "Missing bank details for bank transaction" });
   }
-  const expense = await ExpensesService.postExpenses({
-    userId,
-    expenseName,
-    expenseAmount,
-    categoryName,
-    isBank,
-    bankName,
-    cardNumber,
-    accountNumber,
-  });
 
-  res.status(201).json(expense);
+  try {
+    const expense = await ExpensesService.postExpenses({
+      userId,
+      expenseName,
+      expenseAmount,
+      categoryName,
+      isBank,
+      bankName,
+      cardNumber,
+      accountNumber,
+    });
+
+    if (!expense) {
+      return res.status(500).json({ error: "Failed to create expense" });
+    }
+
+    res.status(201).json(expense);
+  } catch (error) {
+    console.error("Error in postExpenses controller:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
 const getExpensesByDate = async (req, res) => {

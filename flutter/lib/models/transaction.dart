@@ -10,6 +10,10 @@ class Transaction {
   final DateTime date;
   final TransactionType type;
   final Category category;
+  final bool isBank;
+  final String? bankName;
+  final String? cardNumber;
+  final String? accountNumber;
 
   Transaction({
     required this.id,
@@ -18,6 +22,10 @@ class Transaction {
     required this.date,
     required this.type,
     required this.category,
+    this.isBank = false,
+    this.bankName,
+    this.cardNumber,
+    this.accountNumber,
   });
 
   Color get color => type == TransactionType.income ? Colors.green : Colors.red;
@@ -29,6 +37,7 @@ class Transaction {
     if (categoryName.contains('shop')) return Icons.shopping_cart;
     if (categoryName.contains('bill')) return Icons.receipt;
     if (categoryName.contains('entertain')) return Icons.movie;
+    if (isBank) return Icons.account_balance;
     return Icons.category;
   }
 
@@ -40,6 +49,10 @@ class Transaction {
       'date': date.toIso8601String(),
       'type': type.toString().split('.').last,
       'category': category.toJson(),
+      'isBank': isBank,
+      'bankName': bankName,
+      'cardNumber': cardNumber,
+      'accountNumber': accountNumber,
     };
   }
 
@@ -53,6 +66,10 @@ class Transaction {
       category: json['category'] != null 
           ? Category.fromJson(json['category'])
           : Category(id: '', categoryName: json['categoryName'] ?? 'Other'),
+      isBank: json['isBank'] ?? false,
+      bankName: json['bankName'],
+      cardNumber: json['cardNumber'],
+      accountNumber: json['accountNumber'],
     );
   }
 }

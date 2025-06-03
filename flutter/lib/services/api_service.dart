@@ -456,7 +456,16 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> addExpense(Transaction transaction) async {
+  Future<Transaction> addExpense({
+    required String expenseName,
+    required double amount,
+    required Category category,
+    required DateTime date,
+    bool isBank = false,
+    String? bankName,
+    String? cardNumber,
+    String? accountNumber,
+  }) async {
     if (_userId == null || _userId!.isEmpty) {
       await _loadUserId();
     }
@@ -465,92 +474,82 @@ class ApiService {
       throw Exception('User ID not set. Please login first.');
     }
 
-    if (_useMock) {
-      await Future.delayed(const Duration(seconds: 1));
-      final mockResponse = {
-        'userId': _userId,
-        'expenseAmount': transaction.amount,
-        'expenseName': transaction.expenseName.isNotEmpty
-            ? transaction.expenseName
-            : 'Unnamed',
-        'categoryName': transaction.category.categoryName,
-      };
-      print('🧪 Mock API: Transaction added successfully');
-      print('🧾 Response: ${jsonEncode(mockResponse)}');
-      return mockResponse;
-    }
-
     try {
-      final categoryName = transaction.category.categoryName;
-      final expenseName = transaction.expenseName.trim().isNotEmpty
-          ? transaction.expenseName
-          : "Unnamed";
-
       print('Adding expense with data:');
       print('userId: $_userId');
       print('expenseName: $expenseName');
-      print('expenseAmount: ${transaction.amount}');
-      print('categoryName: $categoryName');
-
-      final saveResponse = await http
-          .post(
-            Uri.parse('$baseUrl/expenses/postExpenses'),
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: jsonEncode({
-              'userId': _userId,
-              'expenseName': expenseName,
-              'expenseAmount': transaction.amount,
-              'categoryName': categoryName,
-            }),
-          )
-          .timeout(const Duration(seconds: 10));
-
-      print('Response status: ${saveResponse.statusCode}');
-      print('Response body: ${saveResponse.body}');
-
-      if (saveResponse.statusCode != 201) {
-        throw Exception(
-            'Expense addition failed: ${saveResponse.statusCode} - ${saveResponse.body}');
+      print('expenseAmount: $amount');
+      print('categoryName: ${category.categoryName}');
+      print('isBank: $isBank');
+      if (isBank) {
+        print('bankName: $bankName');
+        print('cardNumber: $cardNumber');
+        print('accountNumber: $accountNumber');
       }
 
-      final savedExpense = jsonDecode(saveResponse.body);
-      print("✅ Expense saved: $savedExpense");
+      final response = await http.post(
+        Uri.parse('$baseUrl/expenses/postExpenses'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'userId': _userId,
+          'expenseName': expenseName,
+          'expenseAmount': amount,
+          'categoryName': category.categoryName,
+          'date': date.toIso8601String(),
+          'isBank': isBank,
+          'bankName': bankName,
+          'cardNumber': cardNumber,
+          'accountNumber': accountNumber,
+        }),
+      );
 
-      // Deduct from AI budget
-      try {
-        final deductResponse = await http
-            .post(
-              Uri.parse('$baseUrl/ai/deductExpense'),
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: jsonEncode({
-                'userId': _userId,
-                'categoryName': categoryName,
-                'expenseAmount': transaction.amount,
-              }),
-            )
-            .timeout(const Duration(seconds: 10));
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
-        if (deductResponse.statusCode == 200) {
-          final updatedBudget = jsonDecode(deductResponse.body);
-          print("✅ Budget updated: $updatedBudget");
-        } else {
-          print(
-              "⚠️ Failed to deduct from AI budget: ${deductResponse.statusCode}");
+      if (response.statusCode == 201) {
+        // If the response body is empty or null, create a Transaction from the request data
+        if (response.body.isEmpty) {
+          return Transaction(
+            id: const Uuid().v4(),
+            amount: amount,
+            expenseName: expenseName,
+            date: date,
+            type: TransactionType.expense,
+            category: category,
+            isBank: isBank,
+            bankName: bankName,
+            cardNumber: cardNumber,
+            accountNumber: accountNumber,
+          );
         }
-      } catch (e) {
-        print("⚠️ Error deducting from AI budget: $e");
-        // Don't throw here, as the expense was already saved
+        
+        // Otherwise, try to parse the response
+        try {
+          return Transaction.fromJson(jsonDecode(response.body), TransactionType.expense);
+        } catch (e) {
+          print('Error parsing response: $e');
+          // If parsing fails, create a Transaction from the request data
+          return Transaction(
+            id: const Uuid().v4(),
+            amount: amount,
+            expenseName: expenseName,
+            date: date,
+            type: TransactionType.expense,
+            category: category,
+            isBank: isBank,
+            bankName: bankName,
+            cardNumber: cardNumber,
+            accountNumber: accountNumber,
+          );
+        }
+      } else {
+        throw Exception('Failed to add expense: ${response.statusCode} - ${response.body}');
       }
-
-      return savedExpense;
     } catch (e) {
-      print('❌ Exception while adding transaction: $e');
-      print('📦 Transaction details: ${jsonEncode(transaction.toJson())}');
-      rethrow;
+      print('Error adding expense: $e');
+      throw Exception('Failed to add expense: $e');
     }
   }
 
