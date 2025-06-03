@@ -9,6 +9,7 @@ const botpressRoutes = require("./botpress.routes");
 const aiRoutes = require("./ai.routes");
 const collaborativeGoalRoutes = require("./collaborativeGoal.routes");
 
+
 module.exports = (app) => {
   app.use("/api/users", userRoute);
   app.use("/api/categories", categoriesRoute);

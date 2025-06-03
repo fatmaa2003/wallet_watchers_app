@@ -61,6 +61,7 @@ exports.updateParticipantStatus = async (goalId, userId, status) =>
     { $set: { "participants.$.status": status } }
   );
 
+  
 // Get all pending invitations for a user
 exports.getPendingInvites = async (userId) =>
   CollaborativeGoal.find({

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const controller = require("../controller/collaborativeGoal.controller");
 
+
 router.post("/create", controller.createGoal);
 router.get("/:userId", controller.getGoals);
 router.put("/update-contribution", controller.updateContribution);
