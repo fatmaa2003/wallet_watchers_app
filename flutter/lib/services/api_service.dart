@@ -8,7 +8,7 @@ import 'package:uuid/uuid.dart';
 import 'package:wallet_watchers_app/models/category.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'http://192.168.1.8:3000/api';
   bool _useMock = false; // Toggle this to switch between mock and real API
   String? _userId;
 
@@ -524,10 +524,11 @@ class ApiService {
             accountNumber: accountNumber,
           );
         }
-        
+
         // Otherwise, try to parse the response
         try {
-          return Transaction.fromJson(jsonDecode(response.body), TransactionType.expense);
+          return Transaction.fromJson(
+              jsonDecode(response.body), TransactionType.expense);
         } catch (e) {
           print('Error parsing response: $e');
           // If parsing fails, create a Transaction from the request data
@@ -545,7 +546,8 @@ class ApiService {
           );
         }
       } else {
-        throw Exception('Failed to add expense: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'Failed to add expense: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Error adding expense: $e');
@@ -728,5 +730,15 @@ class ApiService {
         Category(id: '5', categoryName: 'Entertainment'),
       ];
     }
+  }
+
+  Future<int> getPendingInvitesCount() async {
+    if (_userId == null || _userId!.isEmpty) {
+      await _loadUserId();
+    }
+
+    final invites = await fetchInvites();
+    print("Notifications count: ${invites.length}");
+    return invites.length;
   }
 }

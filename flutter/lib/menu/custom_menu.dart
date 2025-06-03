@@ -4,11 +4,38 @@ import 'package:wallet_watchers_app/pages/goals_page.dart';
 import 'package:wallet_watchers_app/pages/profile_page.dart';
 import 'package:wallet_watchers_app/pages/collaborative_goals_page.dart';
 import 'package:wallet_watchers_app/pages/notifications_page.dart';
+import 'package:wallet_watchers_app/services/api_service.dart';
 
-class CustomMenu extends StatelessWidget {
+class CustomMenu extends StatefulWidget {
   final User user;
 
   const CustomMenu({super.key, required this.user});
+
+  @override
+  State<CustomMenu> createState() => _CustomMenuState();
+}
+
+class _CustomMenuState extends State<CustomMenu> {
+  final ApiService _apiService = ApiService();
+  int _notificationCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationCount();
+  }
+
+  Future<void> _loadNotificationCount() async {
+    try {
+      final count = await _apiService.getPendingInvitesCount();
+      print("Notifications count: $count");
+      setState(() {
+        _notificationCount = count;
+      });
+    } catch (e) {
+      print("Error loading notification count: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,14 +66,14 @@ class CustomMenu extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  user.fullName,
+                  widget.user.fullName,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                   ),
                 ),
                 Text(
-                  user.email,
+                  widget.user.email,
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
@@ -61,11 +88,12 @@ class CustomMenu extends StatelessWidget {
             leading: const Icon(Icons.person),
             title: const Text('Profile'),
             onTap: () {
-              Navigator.pop(context); // Close drawer
+              Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => ProfilePage(user: user)),
+                  builder: (context) => ProfilePage(user: widget.user),
+                ),
               );
             },
           ),
@@ -73,14 +101,33 @@ class CustomMenu extends StatelessWidget {
           // Notifications Page
           ListTile(
             leading: const Icon(Icons.notifications),
-            title: const Text('Notifications'),
-            onTap: () {
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Notifications'),
+                if (_notificationCount > 0)
+                  CircleAvatar(
+                    radius: 10,
+                    backgroundColor: Colors.red,
+                    child: Text(
+                      '$_notificationCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onTap: () async {
               Navigator.pop(context);
-              Navigator.push(
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (context) => const NotificationsPage()),
               );
+              _loadNotificationCount(); // refresh after returning
             },
           ),
 
@@ -92,12 +139,14 @@ class CustomMenu extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => GoalsPage(user: user)),
+                MaterialPageRoute(
+                  builder: (context) => GoalsPage(user: widget.user),
+                ),
               );
             },
           ),
 
-          //Collaborative Goals
+          // Collaborative Goals Page
           ListTile(
             leading: const Icon(Icons.group),
             title: const Text('Collaborative Goals'),
@@ -106,18 +155,19 @@ class CustomMenu extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const CollaborativeGoalsPage()),
+                  builder: (context) => const CollaborativeGoalsPage(),
+                ),
               );
             },
           ),
 
-          // Contact Us (placeholder)
+          // Contact Us
           ListTile(
             leading: const Icon(Icons.contact_support),
             title: const Text('Contact Us'),
             onTap: () {
               Navigator.pop(context);
-              // Implement later
+              // Future implementation
             },
           ),
 

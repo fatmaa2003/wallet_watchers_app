@@ -9,7 +9,6 @@ exports.createGoal = async (req, res) => {
   }
 };
 
-
 exports.getGoals = async (req, res) => {
   try {
     const goals = await service.getUserGoals(req.params.userId);

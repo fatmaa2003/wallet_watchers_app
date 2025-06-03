@@ -69,8 +69,7 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
               textStyle:
                   const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+                  borderRadius: BorderRadius.circular(12)),
             ),
             icon: const Icon(Icons.add),
             label: const Text("Create Goal"),
@@ -128,25 +127,32 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
               ],
             ),
             const SizedBox(height: 10),
-            ...goal.participants
-                .where((p) => p.status == 'accepted')
-                .map((p) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "${p.name}: ${p.savedAmount.toStringAsFixed(2)} / ${goal.totalTargetPerUser}",
-                          style: const TextStyle(color: Colors.black87),
-                        ),
-                        LinearProgressIndicator(
-                          value: (p.savedAmount / goal.totalTargetPerUser)
-                              .clamp(0.0, 1.0),
-                          minHeight: 8,
-                          backgroundColor: Colors.grey[300],
-                          color: Colors.lightBlueAccent,
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                    )),
+            ...goal.participants.map((p) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "${p.name} (${p.status == 'accepted' ? 'Contributing' : 'Pending'})"
+                      "${p.status == 'accepted' ? ': ${p.savedAmount.toStringAsFixed(2)} / ${goal.totalTargetPerUser}' : ''}",
+                      style: TextStyle(
+                        color: p.status == 'accepted'
+                            ? Colors.black87
+                            : Colors.grey,
+                        fontWeight: p.status == 'accepted'
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                    if (p.status == 'accepted')
+                      LinearProgressIndicator(
+                        value: (p.savedAmount / goal.totalTargetPerUser)
+                            .clamp(0.0, 1.0),
+                        minHeight: 8,
+                        backgroundColor: Colors.grey[300],
+                        color: Colors.lightBlueAccent,
+                      ),
+                    const SizedBox(height: 8),
+                  ],
+                )),
             if (isCreator)
               ...goal.participants
                   .where((p) =>
@@ -240,8 +246,7 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
         actions: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.lightBlueAccent,
-            ),
+                backgroundColor: Colors.lightBlueAccent),
             onPressed: () async {
               final email = emailController.text.trim();
               if (email.isNotEmpty) {
@@ -270,15 +275,12 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
         content: TextField(
           controller: amountController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(border: OutlineInputBorder()),
         ),
         actions: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.lightBlueAccent,
-            ),
+                backgroundColor: Colors.lightBlueAccent),
             onPressed: () async {
               final amount =
                   double.tryParse(amountController.text.trim()) ?? current;
