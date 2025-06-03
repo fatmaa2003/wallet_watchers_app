@@ -7,12 +7,14 @@ const profileRoutes = require("./profile.routes");
 const incomeRoutes = require("./income.routes");
 const botpressRoutes = require("./botpress.routes");
 const aiRoutes = require("./ai.routes");
+const cardsRoute = require("./cards.routes");
 const collaborativeGoalRoutes = require("./collaborativeGoal.routes");
 
 
 module.exports = (app) => {
   app.use("/api/users", userRoute);
   app.use("/api/categories", categoriesRoute);
+  app.use("/api/cards", cardsRoute);
   app.use("/api/expenses", expensesRoute);
   app.use("/api/receipts", receiptRoute);
   app.use("/api/goals", goalRoutes);
