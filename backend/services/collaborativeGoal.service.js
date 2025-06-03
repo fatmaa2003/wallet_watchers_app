@@ -1,5 +1,6 @@
 const repo = require("../repository/collaborativeGoal.repository");
 
+
 exports.createGoal = async (data) => repo.createGoal(data);
 exports.getUserGoals = async (userId) => repo.getGoalsByUserId(userId);
 exports.updateContribution = async (goalId, userId, amount) => repo.updateParticipantAmount(goalId, userId, amount);
