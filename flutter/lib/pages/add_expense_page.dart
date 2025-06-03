@@ -5,6 +5,7 @@ import 'package:wallet_watchers_app/models/category.dart';
 import 'package:wallet_watchers_app/providers/categories_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:intl/intl.dart';
 
 class AddExpensePage extends StatefulWidget {
   final ApiService apiService;
@@ -23,81 +24,108 @@ class AddExpensePage extends StatefulWidget {
 class _AddExpensePageState extends State<AddExpensePage> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _dateController = TextEditingController();
+  DateTime _selectedDate = DateTime.now();
   Category? _selectedCategory;
+  bool _isBank = false;
+  final _bankNameController = TextEditingController();
+  final _cardNumberController = TextEditingController();
+  final _accountNumberController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _dateController.text = DateFormat('yyyy-MM-dd').format(_selectedDate);
     if (widget.initialExpense != null) {
       _amountController.text = widget.initialExpense!.amount.toString();
-      _descriptionController.text = widget.initialExpense!.expenseName;
-      // Don't set the category here, wait for categories to load
+      _nameController.text = widget.initialExpense!.expenseName;
+      _selectedDate = widget.initialExpense!.date;
+      _selectedCategory = widget.initialExpense!.category;
     }
-    // Load categories when the page opens
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await context.read<CategoriesProvider>().loadCategories();
-      if (widget.initialExpense != null && mounted) {
-        // Find matching category after categories are loaded
-        final categories = context.read<CategoriesProvider>().categories;
-        final matchingCategory = categories.firstWhere(
-          (cat) => cat.categoryName.toLowerCase() == widget.initialExpense!.category.categoryName.toLowerCase(),
-          orElse: () => categories.first,
-        );
-        setState(() {
-          _selectedCategory = matchingCategory;
-        });
-      }
-    });
+    _loadCategories();
   }
 
   @override
   void dispose() {
     _amountController.dispose();
-    _descriptionController.dispose();
+    _nameController.dispose();
+    _dateController.dispose();
+    _bankNameController.dispose();
+    _cardNumberController.dispose();
+    _accountNumberController.dispose();
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category')),
-      );
-      return;
+  Future<void> _loadCategories() async {
+    final categoriesProvider = Provider.of<CategoriesProvider>(context, listen: false);
+    await categoriesProvider.loadCategories();
+    if (mounted) {
+      setState(() {
+        _selectedCategory = categoriesProvider.categories.firstOrNull;
+      });
     }
+  }
 
-    setState(() => _isLoading = true);
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _dateController.text = DateFormat('yyyy-MM-dd').format(_selectedDate);
+      });
+    }
+  }
 
-    try {
-      final transaction = Transaction(
-        id: widget.initialExpense?.id ?? const Uuid().v4(),
-        amount: double.parse(_amountController.text),
-        expenseName: _descriptionController.text,
-        category: _selectedCategory!,
-        type: TransactionType.expense,
-        date: widget.initialExpense?.date ?? DateTime.now(),
-      );
-
-      if (widget.initialExpense != null) {
-        await widget.apiService.updateExpense(transaction);
-      } else {
-        await widget.apiService.addExpense(transaction);
+  String _formatCardNumber(String input) {
+    // Remove any non-digit characters
+    String digits = input.replaceAll(RegExp(r'[^\d]'), '');
+    
+    // Format as XXXX-XXXX-XXXX-XXXX
+    if (digits.length > 16) {
+      digits = digits.substring(0, 16);
+    }
+    
+    String formatted = '';
+    for (int i = 0; i < digits.length; i++) {
+      if (i > 0 && i % 4 == 0) {
+        formatted += '-';
       }
+      formatted += digits[i];
+    }
+    
+    return formatted;
+  }
 
-      if (mounted) {
-        Navigator.pop(context, true);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+  Future<void> _submitExpense() async {
+    if (_formKey.currentState!.validate() && _selectedCategory != null) {
+      try {
+        final apiService = Provider.of<ApiService>(context, listen: false);
+        await apiService.addExpense(
+          expenseName: _nameController.text,
+          amount: double.parse(_amountController.text),
+          category: _selectedCategory!,
+          date: _selectedDate,
+          isBank: _isBank,
+          bankName: _isBank ? _bankNameController.text : null,
+          cardNumber: _isBank ? _formatCardNumber(_cardNumberController.text) : null,
+          accountNumber: _isBank ? _accountNumberController.text : null,
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error adding expense: $e')),
+          );
+        }
       }
     }
   }
@@ -124,7 +152,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
 
   @override
   Widget build(BuildContext context) {
-    final categoriesProvider = context.watch<CategoriesProvider>();
+    final categoriesProvider = Provider.of<CategoriesProvider>(context);
     final categories = categoriesProvider.categories;
 
     return Scaffold(
@@ -145,133 +173,144 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Amount Input
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey[200]!,
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Expense Name',
+                          border: OutlineInputBorder(),
                         ),
-                        child: TextFormField(
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter an expense name';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _amountController,
+                        decoration: const InputDecoration(
+                          labelText: 'Amount',
+                          border: OutlineInputBorder(),
+                          prefixText: '\$',
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter an amount';
+                          }
+                          if (double.tryParse(value) == null) {
+                            return 'Please enter a valid number';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<Category>(
+                        value: _selectedCategory,
+                        decoration: const InputDecoration(
+                          labelText: 'Category',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: categories.map((Category category) {
+                          return DropdownMenuItem<Category>(
+                            value: category,
+                            child: Text(category.categoryName),
+                          );
+                        }).toList(),
+                        onChanged: (Category? newValue) {
+                          setState(() {
+                            _selectedCategory = newValue;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Please select a category';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _dateController,
+                        decoration: const InputDecoration(
+                          labelText: 'Date',
+                          border: OutlineInputBorder(),
+                          suffixIcon: Icon(Icons.calendar_today),
+                        ),
+                        readOnly: true,
+                        onTap: () => _selectDate(context),
+                      ),
+                      const SizedBox(height: 16),
+                      SwitchListTile(
+                        title: const Text('Bank Transaction'),
+                        value: _isBank,
+                        onChanged: (bool value) {
+                          setState(() {
+                            _isBank = value;
+                          });
+                        },
+                      ),
+                      if (_isBank) ...[
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _bankNameController,
                           decoration: const InputDecoration(
-                            labelText: 'Amount',
-                            prefixText: '\$ ',
-                            border: InputBorder.none,
-                            labelStyle: TextStyle(color: Colors.grey),
+                            labelText: 'Bank Name',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (_isBank && (value == null || value.isEmpty)) {
+                              return 'Please enter a bank name';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _cardNumberController,
+                          decoration: const InputDecoration(
+                            labelText: 'Card Number (XXXX-XXXX-XXXX-XXXX)',
+                            border: OutlineInputBorder(),
+                            hintText: '1234-5678-9876-5432',
                           ),
                           keyboardType: TextInputType.number,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          validator: (v) => v == null || double.tryParse(v) == null || double.parse(v) <= 0
-                              ? 'Enter a valid amount'
-                              : null,
-                          controller: _amountController,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Description Input
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey[200]!,
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: 'Description',
-                            border: InputBorder.none,
-                            labelStyle: TextStyle(color: Colors.grey),
-                          ),
-                          validator: (v) => v == null || v.isEmpty ? 'Enter a description' : null,
-                          controller: _descriptionController,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Category Selection
-                      const Text(
-                        'Category',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey[200]!,
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: DropdownButtonFormField<Category>(
-                          value: _selectedCategory,
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                          ),
-                          items: categories.map((category) {
-                            return DropdownMenuItem(
-                              value: category,
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    _getCategoryIcon(category.categoryName),
-                                    color: _getCategoryColor(category.categoryName),
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    category.categoryName,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (cat) {
-                            if (cat != null) {
-                              setState(() => _selectedCategory = cat);
+                          validator: (value) {
+                            if (_isBank && (value == null || value.isEmpty)) {
+                              return 'Please enter a card number';
                             }
+                            if (_isBank && value != null && value.isNotEmpty) {
+                              // Remove any non-digit characters for validation
+                              String digits = value.replaceAll(RegExp(r'[^\d]'), '');
+                              if (digits.length != 16) {
+                                return 'Card number must be 16 digits';
+                              }
+                            }
+                            return null;
                           },
-                          validator: (cat) => cat == null ? 'Select a category' : null,
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _accountNumberController,
+                          decoration: const InputDecoration(
+                            labelText: 'Account Number',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (_isBank && (value == null || value.isEmpty)) {
+                              return 'Please enter an account number';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
                       const SizedBox(height: 32),
-
-                      // Submit Button
                       SizedBox(
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _submit,
+                          onPressed: _isLoading ? null : _submitExpense,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
                             shape: RoundedRectangleBorder(

@@ -94,6 +94,17 @@ const postExpenses = async ({
   accountNumber,
 }) => {
   try {
+    console.log("In repository postExpenses with data:", {
+      userId,
+      expenseName,
+      expenseAmount,
+      categoryName,
+      isBank,
+      bankName,
+      cardNumber,
+      accountNumber,
+    });
+
     const user = await User.findById(userId);
     if (!user) {
       console.error("User not found");
@@ -115,6 +126,7 @@ const postExpenses = async ({
       expenseAmount,
       categoryName,
       isBank,
+      createdAt: new Date(),
     };
 
     if (isBank) {
@@ -124,8 +136,9 @@ const postExpenses = async ({
     }
 
     const newExpense = new Expenses(expenseData);
-    await newExpense.save();
-    return newExpense;
+    const savedExpense = await newExpense.save();
+    console.log("Saved expense:", savedExpense);
+    return savedExpense;
   } catch (err) {
     console.error("Error in postExpenses (repository):", err);
     return null;
