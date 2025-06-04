@@ -1,21 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:wallet_watchers_app/services/api_service.dart';
 import 'package:wallet_watchers_app/models/transaction.dart';
+import 'package:uuid/uuid.dart';
+import 'package:provider/provider.dart';
 import 'package:wallet_watchers_app/models/category.dart';
 import 'package:wallet_watchers_app/providers/categories_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
-import 'package:intl/intl.dart';
 
 class AddExpensePage extends StatefulWidget {
   final ApiService apiService;
   final Transaction? initialExpense;
-
-  const AddExpensePage({
-    super.key,
-    required this.apiService,
-    this.initialExpense,
-  });
+  const AddExpensePage({super.key, required this.apiService, this.initialExpense});
 
   @override
   State<AddExpensePage> createState() => _AddExpensePageState();
@@ -23,229 +17,290 @@ class AddExpensePage extends StatefulWidget {
 
 class _AddExpensePageState extends State<AddExpensePage> {
   final _formKey = GlobalKey<FormState>();
-  final _amountController = TextEditingController();
-  final _nameController = TextEditingController();
-  final _dateController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
-  Category? _selectedCategory;
+  double? _amount;
+  String? _expenseName;
+  Category? _category;
+  DateTime? _date;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _dateController.text = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    if (widget.initialExpense != null) {
-      _amountController.text = widget.initialExpense!.amount.toString();
-      _nameController.text = widget.initialExpense!.expenseName;
-      _selectedDate = widget.initialExpense!.date;
-      _selectedCategory = widget.initialExpense!.category;
-    }
-    _loadCategories();
-  }
-
-  @override
-  void dispose() {
-    _amountController.dispose();
-    _nameController.dispose();
-    _dateController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadCategories() async {
     final categoriesProvider = Provider.of<CategoriesProvider>(context, listen: false);
-    await categoriesProvider.loadCategories();
-    if (mounted) {
-      setState(() {
-        _selectedCategory = categoriesProvider.categories.firstOrNull;
-      });
+    if (categoriesProvider.categories.isEmpty && !categoriesProvider.isLoading) {
+      categoriesProvider.loadCategories();
+    }
+    if (widget.initialExpense != null) {
+      _amount = widget.initialExpense!.amount;
+      _expenseName = widget.initialExpense!.expenseName;
+      _date = widget.initialExpense!.date;
+    } else {
+      _date = DateTime.now();
     }
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: _date ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null) {
       setState(() {
-        _selectedDate = picked;
-        _dateController.text = DateFormat('yyyy-MM-dd').format(_selectedDate);
+        _date = picked;
       });
     }
   }
 
-  String _formatCardNumber(String input) {
-    // Remove any non-digit characters
-    String digits = input.replaceAll(RegExp(r'[^\d]'), '');
-    
-    // Format as XXXX-XXXX-XXXX-XXXX
-    if (digits.length > 16) {
-      digits = digits.substring(0, 16);
-    }
-    
-    String formatted = '';
-    for (int i = 0; i < digits.length; i++) {
-      if (i > 0 && i % 4 == 0) {
-        formatted += '-';
-      }
-      formatted += digits[i];
-    }
-    
-    return formatted;
-  }
-
-  Future<void> _submitExpense() async {
-    if (_formKey.currentState!.validate() && _selectedCategory != null) {
-      try {
-        setState(() => _isLoading = true);
-        final apiService = Provider.of<ApiService>(context, listen: false);
-        await apiService.addExpense(
-          expenseName: _nameController.text,
-          amount: double.parse(_amountController.text),
-          category: _selectedCategory!,
-          date: _selectedDate,
-        );
-        if (mounted) {
-          Navigator.pop(context, true);
-        }
-      } catch (e) {
+  void _submit() async {
+    print('DEBUG: initialExpense: \\${widget.initialExpense}');
+    if (!_formKey.currentState!.validate()) return;
+    _formKey.currentState!.save();
+    setState(() => _isLoading = true);
+    try {
+      final transaction = Transaction(
+        id: widget.initialExpense?.id ?? const Uuid().v4(),
+        amount: _amount!,
+        expenseName: _expenseName!,
+        date: _date!,
+        type: TransactionType.expense,
+        category: _category!,
+      );
+      print('DEBUG: Submitting transaction: \\${transaction.toJson()}');
+      if (widget.initialExpense != null) {
+        await widget.apiService.updateExpense(transaction);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error adding expense: $e')),
+            const SnackBar(content: Text('Expense updated!')),
           );
         }
-      } finally {
+      } else {
+        await widget.apiService.addExpense(
+          expenseName: transaction.expenseName,
+          amount: transaction.amount,
+          category: transaction.category,
+          date: transaction.date,
+        );
         if (mounted) {
-          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Expense added!')),
+          );
         }
       }
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  IconData _getCategoryIcon(String categoryName) {
-    final name = categoryName.toLowerCase();
-    if (name.contains('food')) return Icons.restaurant;
-    if (name.contains('transport')) return Icons.directions_car;
-    if (name.contains('shop')) return Icons.shopping_bag;
-    if (name.contains('bill')) return Icons.receipt;
-    if (name.contains('entertain')) return Icons.movie;
-    return Icons.more_horiz;
-  }
-
-  Color _getCategoryColor(String categoryName) {
-    final name = categoryName.toLowerCase();
-    if (name.contains('food')) return Colors.orange;
-    if (name.contains('transport')) return Colors.blue;
-    if (name.contains('shop')) return Colors.pink;
-    if (name.contains('bill')) return Colors.red;
-    if (name.contains('entertain')) return Colors.purple;
-    return Colors.grey;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(widget.initialExpense != null ? 'Edit Expense' : 'Add Expense'),
+        title: const Text('Add Expense'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Expense Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an expense name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _amountController,
-                decoration: const InputDecoration(
-                  labelText: 'Amount',
-                  border: OutlineInputBorder(),
-                  prefixText: '\$',
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an amount';
-                  }
-                  if (double.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _dateController,
-                decoration: const InputDecoration(
-                  labelText: 'Date',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today),
-                ),
-                readOnly: true,
-                onTap: () => _selectDate(context),
-              ),
-              const SizedBox(height: 16),
-              Consumer<CategoriesProvider>(
-                builder: (context, categoriesProvider, child) {
-                  return DropdownButtonFormField<Category>(
-                    value: _selectedCategory,
-                    decoration: const InputDecoration(
-                      labelText: 'Category',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: categoriesProvider.categories.map((category) {
-                      return DropdownMenuItem(
-                        value: category,
-                        child: Row(
-                          children: [
-                            Icon(
-                              _getCategoryIcon(category.categoryName),
-                              color: _getCategoryColor(category.categoryName),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(category.categoryName),
-                          ],
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Consumer<CategoriesProvider>(
+            builder: (context, categoriesProvider, _) {
+              if (categoriesProvider.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (categoriesProvider.error != null) {
+                return Center(child: Text('Error: ${categoriesProvider.error}'));
+              }
+              final categories = categoriesProvider.categories;
+
+              // Ensure _category is the same instance as in categories list
+              if (_category == null && widget.initialExpense != null && categories.isNotEmpty) {
+                final match = categories.firstWhere(
+                  (cat) => cat.id == widget.initialExpense!.category.id,
+                  orElse: () => categories.first,
+                );
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() => _category = match);
+                });
+              }
+
+              return Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Amount Input
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey[200]!,
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Amount',
+                          prefixText: '\$ ',
+                          border: InputBorder.none,
+                          labelStyle: TextStyle(color: Colors.grey),
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (Category? newValue) {
-                      setState(() {
-                        _selectedCategory = newValue;
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null) {
-                        return 'Please select a category';
-                      }
-                      return null;
-                    },
-                  );
-                },
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submitExpense,
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : Text(widget.initialExpense != null ? 'Update Expense' : 'Add Expense'),
-              ),
-            ],
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        initialValue: _amount?.toString(),
+                        validator: (v) => v == null || double.tryParse(v) == null || double.parse(v) <= 0
+                            ? 'Enter a valid amount'
+                            : null,
+                        onSaved: (v) => _amount = double.parse(v!),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Expense Name Input
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey[200]!,
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Expense Name',
+                          border: InputBorder.none,
+                          labelStyle: TextStyle(color: Colors.grey),
+                        ),
+                        initialValue: _expenseName,
+                        validator: (v) => v == null || v.isEmpty ? 'Enter an expense name' : null,
+                        onSaved: (v) => _expenseName = v,
+                        enabled: widget.initialExpense == null,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Date Picker
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey[200]!,
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Date'),
+                        subtitle: Text(_date != null ? _date!.toLocal().toString().split(' ')[0] : ''),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.calendar_today),
+                          onPressed: widget.initialExpense == null ? _pickDate : null,
+                        ),
+                        onTap: widget.initialExpense == null ? _pickDate : null,
+                        enabled: widget.initialExpense == null,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Category Dropdown
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey[200]!,
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: DropdownButtonFormField<Category>(
+                        decoration: const InputDecoration(
+                          labelText: 'Category',
+                          border: InputBorder.none,
+                          labelStyle: TextStyle(color: Colors.grey),
+                        ),
+                        value: _category,
+                        items: categories.map((cat) {
+                          return DropdownMenuItem(
+                            value: cat,
+                            child: Text(cat.categoryName),
+                          );
+                        }).toList(),
+                        onChanged: widget.initialExpense == null ? (cat) => setState(() => _category = cat) : null,
+                        validator: (cat) => cat == null ? 'Select a category' : null,
+                        onSaved: (cat) => _category = cat,
+                        disabledHint: _category != null ? Text(_category!.categoryName) : null,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Submit Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red[400],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                widget.initialExpense != null ? 'Update Expense' : 'Add Expense',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
