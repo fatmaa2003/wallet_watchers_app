@@ -32,7 +32,12 @@ class _BankPageState extends State<BankPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading cards: $e')),
+          SnackBar(
+            content: Text('Error loading cards: $e'),
+            backgroundColor: Colors.red[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
         );
       }
     } finally {
@@ -200,13 +205,23 @@ class _BankPageState extends State<BankPage> {
                     Navigator.pop(context);
                     _loadCards();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Card added successfully')),
+                      SnackBar(
+                        content: const Text('Card added successfully'),
+                        backgroundColor: Colors.green[600],
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
                     );
                   }
                 } catch (e) {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error adding card: $e')),
+                      SnackBar(
+                        content: Text('Error adding card: $e'),
+                        backgroundColor: Colors.red[600],
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
                     );
                   }
                 }
@@ -220,15 +235,34 @@ class _BankPageState extends State<BankPage> {
   }
 
   Widget _buildCardWidget(Map<String, dynamic> card) {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final isDesktop = screenSize.width > 900;
+    
     // Add null safety checks with default values
     final cardNumber = card['cardNumber']?.toString() ?? '****-****-****-****';
     final cardHolder = card['cardHolder']?.toString().toUpperCase() ?? 'CARD HOLDER';
-    final expiryDate = card['expiryDate']?.toString() ?? 'MM/YY';
     final cardName = card['cardName']?.toString() ?? '';
+    
+    // Format expiry date to MM/YY
+    String formattedExpiryDate = 'MM/YY';
+    if (card['expiryDate'] != null) {
+      try {
+        final date = DateTime.parse(card['expiryDate'].toString());
+        final month = date.month.toString().padLeft(2, '0');
+        final year = (date.year % 100).toString().padLeft(2, '0');
+        formattedExpiryDate = '$month/$year';
+      } catch (e) {
+        formattedExpiryDate = 'MM/YY';
+      }
+    }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      height: 200,
+      margin: EdgeInsets.symmetric(
+        horizontal: isTablet ? 20 : 16, 
+        vertical: isTablet ? 12 : 8
+      ),
+      height: isTablet ? 240 : 200,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -240,7 +274,7 @@ class _BankPageState extends State<BankPage> {
           ],
           stops: const [0.0, 0.5, 1.0],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF3B82F6).withOpacity(0.3),
@@ -253,11 +287,11 @@ class _BankPageState extends State<BankPage> {
         children: [
           // Background Elements
           Positioned(
-            right: -20,
-            top: -20,
+            right: isTablet ? -25 : -20,
+            top: isTablet ? -25 : -20,
             child: Container(
-              width: 150,
-              height: 150,
+              width: isTablet ? 180 : 150,
+              height: isTablet ? 180 : 150,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withOpacity(0.1),
@@ -265,11 +299,11 @@ class _BankPageState extends State<BankPage> {
             ),
           ),
           Positioned(
-            left: -30,
-            bottom: -30,
+            left: isTablet ? -35 : -30,
+            bottom: isTablet ? -35 : -30,
             child: Container(
-              width: 120,
-              height: 120,
+              width: isTablet ? 140 : 120,
+              height: isTablet ? 140 : 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withOpacity(0.1),
@@ -278,7 +312,7 @@ class _BankPageState extends State<BankPage> {
           ),
           // Card Content
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(isTablet ? 24 : 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -289,16 +323,16 @@ class _BankPageState extends State<BankPage> {
                     if (cardName.isNotEmpty)
                       Text(
                         cardName.toUpperCase(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white70,
-                          fontSize: 14,
+                          fontSize: isTablet ? 16 : 14,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 1,
                         ),
                       ),
                     Container(
-                      width: 40,
-                      height: 30,
+                      width: isTablet ? 48 : 40,
+                      height: isTablet ? 36 : 30,
                       decoration: BoxDecoration(
                         color: Colors.amber[100],
                         borderRadius: BorderRadius.circular(4),
@@ -307,7 +341,7 @@ class _BankPageState extends State<BankPage> {
                         child: Icon(
                           Icons.credit_card,
                           color: Colors.amber[800],
-                          size: 20,
+                          size: isTablet ? 24 : 20,
                         ),
                       ),
                     ),
@@ -317,9 +351,9 @@ class _BankPageState extends State<BankPage> {
                 // Card Number
                 Text(
                   '•••• •••• •••• ${cardNumber.split('-').last}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: isTablet ? 24 : 20,
                     letterSpacing: 2,
                     fontWeight: FontWeight.w500,
                     fontFamily: 'Roboto',
@@ -336,9 +370,9 @@ class _BankPageState extends State<BankPage> {
                       children: [
                         Text(
                           cardHolder,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 14,
+                            fontSize: isTablet ? 16 : 14,
                             letterSpacing: 0.5,
                             fontWeight: FontWeight.w500,
                           ),
@@ -349,21 +383,21 @@ class _BankPageState extends State<BankPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text(
+                        Text(
                           'EXPIRES',
                           style: TextStyle(
                             color: Colors.white70,
-                            fontSize: 10,
+                            fontSize: isTablet ? 12 : 10,
                             letterSpacing: 1,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: isTablet ? 6 : 4),
                         Text(
-                          expiryDate,
-                          style: const TextStyle(
+                          formattedExpiryDate,
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 14,
+                            fontSize: isTablet ? 16 : 14,
                             letterSpacing: 0.5,
                             fontWeight: FontWeight.w500,
                           ),
@@ -377,8 +411,8 @@ class _BankPageState extends State<BankPage> {
           ),
           // Delete Button
           Positioned(
-            top: 8,
-            right: 8,
+            top: isTablet ? 12 : 8,
+            right: isTablet ? 12 : 8,
             child: Material(
               color: Colors.transparent,
               child: InkWell(
@@ -388,28 +422,38 @@ class _BankPageState extends State<BankPage> {
                     _loadCards();
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Card deleted successfully')),
+                        SnackBar(
+                          content: const Text('Card deleted successfully'),
+                          backgroundColor: Colors.green[600],
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
                       );
                     }
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error deleting card: $e')),
+                        SnackBar(
+                          content: Text('Error deleting card: $e'),
+                          backgroundColor: Colors.red[600],
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
                       );
                     }
                   }
                 },
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(isTablet ? 10 : 8),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.delete_outline,
                     color: Colors.white70,
-                    size: 18,
+                    size: isTablet ? 22 : 18,
                   ),
                 ),
               ),
@@ -422,6 +466,10 @@ class _BankPageState extends State<BankPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final isDesktop = screenSize.width > 900;
+    
     return Scaffold(
       backgroundColor: Colors.blue[50],
       appBar: AppBar(
@@ -437,30 +485,35 @@ class _BankPageState extends State<BankPage> {
                     children: [
                       Icon(
                         Icons.credit_card,
-                        size: 64,
+                        size: isTablet ? 80 : 64,
                         color: Colors.grey[400],
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: isTablet ? 20 : 16),
                       Text(
                         'No cards added yet',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: isTablet ? 22 : 18,
                           color: Colors.grey[600],
                         ),
                       ),
                     ],
                   ),
                 )
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  itemCount: _cards.length,
-                  itemBuilder: (context, index) => _buildCardWidget(_cards[index]),
+              : Padding(
+                  padding: EdgeInsets.only(bottom: isTablet ? 100.0 : 80.0),
+                  child: ListView.builder(
+                    padding: EdgeInsets.symmetric(
+                      vertical: isTablet ? 20 : 16,
+                      horizontal: isTablet ? 8 : 0,
+                    ),
+                    itemCount: _cards.length,
+                    itemBuilder: (context, index) => _buildCardWidget(_cards[index]),
+                  ),
                 ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: _showAddCardDialog,
         backgroundColor: Colors.lightBlueAccent,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Card'),
+        child: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavBar(selectedIndex: 3, user: widget.user),
     );

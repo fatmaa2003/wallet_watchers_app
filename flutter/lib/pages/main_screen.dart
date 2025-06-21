@@ -37,217 +37,258 @@ class _MainScreenState extends State<MainScreen> {
       .where((t) => t.type == TransactionType.expense)
       .fold(0, (sum, t) => sum + t.amount);
 
+  // Track expanded transaction IDs
+  Set<String> _expandedTransactions = {};
+  
+  // Track expanded balance cards
+  Set<String> _expandedBalanceCards = {};
+
+  void _toggleTransactionExpansion(String transactionId) {
+    setState(() {
+      if (_expandedTransactions.contains(transactionId)) {
+        _expandedTransactions.remove(transactionId);
+      } else {
+        _expandedTransactions.add(transactionId);
+      }
+    });
+  }
+  
+  void _toggleBalanceCardExpansion(String cardType) {
+    setState(() {
+      if (_expandedBalanceCards.contains(cardType)) {
+        _expandedBalanceCards.remove(cardType);
+      } else {
+        _expandedBalanceCards.add(cardType);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final apiService = ApiService();
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final isDesktop = screenSize.width > 900;
+    
     return Scaffold(
       endDrawer: CustomMenu(user: widget.user),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-          child: Column(
-            children: [
-              // Header: User Info and Right Side Menu
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Left: User Info
-                  Expanded(
-                    child: Row(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isDesktop ? 32.0 : isTablet ? 24.0 : 16.0, 
+              vertical: 10
+            ),
+            child: Column(
+              children: [
+                // Header: User Info and Right Side Menu
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Left: User Info
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            width: isTablet ? 55 : 45,
+                            height: isTablet ? 55 : 45,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Colors.blue[400]!, Colors.blue[600]!],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(CupertinoIcons.person_fill,
+                                color: Colors.white, size: isTablet ? 24 : 20),
+                          ),
+                          SizedBox(width: isTablet ? 12 : 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Hello!',
+                                    style: TextStyle(
+                                        fontSize: isTablet ? 15 : 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey)),
+                                Text(widget.user.fullName,
+                                    style: TextStyle(
+                                        fontSize: isTablet ? 22 : 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87),
+                                    overflow: TextOverflow.ellipsis),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Right: Message + Chatbot Icon + Menu Icon
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 45,
-                          height: 45,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: isTablet ? 8 : 6, 
+                              vertical: isTablet ? 8 : 6),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.blue[400]!, Colors.blue[600]!],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(CupertinoIcons.person_fill,
-                              color: Colors.white, size: 20),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Hello!',
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey)),
-                              Text(widget.user.fullName,
-                                  style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87),
-                                  overflow: TextOverflow.ellipsis),
+                            color: const Color(0xFFE8F1FA),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
                             ],
+                          ),
+                          child: Text(
+                            'Wallet Bot',
+                            style: TextStyle(
+                              fontSize: isTablet ? 14 : 12, 
+                              color: Colors.black87
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: isTablet ? 6 : 4),
+                        FloatingActionButton(
+                          heroTag: 'chatBot',
+                          tooltip: 'Open Wallet Bot',
+                          mini: !isTablet,
+                          backgroundColor: const Color(0xFF3A9EB7),
+                          elevation: 2,
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const BotpressChatPage()),
+                            );
+                          },
+                          child: Icon(Icons.smart_toy_outlined,
+                              color: Colors.white, size: isTablet ? 22 : 18),
+                        ),
+                        SizedBox(width: isTablet ? 4 : 2),
+                        Builder(
+                          builder: (context) => IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: Icon(Icons.menu, size: isTablet ? 26 : 22),
+                            onPressed: () {
+                              Scaffold.of(context).openEndDrawer();
+                            },
                           ),
                         ),
                       ],
                     ),
-                  ),
+                  ],
+                ),
 
-                  // Right: Message + Chatbot Icon + Menu Icon
-                  Row(
+                SizedBox(height: isTablet ? 40 : 30),
+
+                // Balance Card
+                Container(
+                  width: double.infinity,
+                  height: isTablet ? 300 : 250,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color.fromARGB(255, 79, 161, 168),
+                        Colors.blue[600]!
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(isTablet ? 30 : 25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue[200]!.withOpacity(0.5),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE8F1FA),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.2),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
+                      Text('Total Balance',
+                          style: TextStyle(
+                              fontSize: isTablet ? 20 : 16,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w500)),
+                      SizedBox(height: isTablet ? 12 : 8),
+                      Text('\$${totalBalance.toStringAsFixed(2)}',
+                          style: TextStyle(
+                              fontSize: isTablet ? 40 : 32,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                            vertical: isTablet ? 16 : 12, 
+                            horizontal: isTablet ? 32 : 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildBalanceCard('Income', totalIncome,
+                                CupertinoIcons.arrow_up, Colors.green[400]!),
+                            _buildBalanceCard('Expenses', totalExpenses,
+                                CupertinoIcons.arrow_down, Colors.red[400]!),
                           ],
                         ),
-                        child: const Text(
-                          'Wallet Bot',
-                          style: TextStyle(fontSize: 12, color: Colors.black87),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: isTablet ? 50 : 40),
+
+                // Recent Transactions Section
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: isTablet ? 24.0 : 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Recent Transactions',
+                        style: TextStyle(
+                          fontSize: isTablet ? 24 : 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      FloatingActionButton(
-                        heroTag: 'chatBot',
-                        tooltip: 'Open Wallet Bot',
-                        mini: true,
-                        backgroundColor: const Color(0xFF3A9EB7),
-                        elevation: 2,
+                      TextButton(
                         onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const BotpressChatPage()),
+                              builder: (context) => AllTransactionsPage(user: widget.user),
+                            ),
                           );
                         },
-                        child: const Icon(Icons.smart_toy_outlined,
-                            color: Colors.white, size: 18),
-                      ),
-                      const SizedBox(width: 2),
-                      Builder(
-                        builder: (context) => IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          icon: const Icon(Icons.menu, size: 22),
-                          onPressed: () {
-                            Scaffold.of(context).openEndDrawer();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 30),
-
-              // Balance Card
-              Container(
-                width: double.infinity,
-                height: 250,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color.fromARGB(255, 79, 161, 168),
-                      Colors.blue[600]!
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blue[200]!.withOpacity(0.5),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Total Balance',
-                        style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 8),
-                    Text('\$${totalBalance.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildBalanceCard('Income', totalIncome,
-                              CupertinoIcons.arrow_up, Colors.green[400]!),
-                          _buildBalanceCard('Expenses', totalExpenses,
-                              CupertinoIcons.arrow_down, Colors.red[400]!),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              // Recent Transactions Section
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Recent Transactions',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AllTransactionsPage(user: widget.user),
+                        child: Text(
+                          'View All',
+                          style: TextStyle(
+                            color: Colors.blue[400],
+                            fontWeight: FontWeight.w600,
+                            fontSize: isTablet ? 16 : 14,
                           ),
-                        );
-                      },
-                      child: Text(
-                        'View All',
-                        style: TextStyle(
-                          color: Colors.blue[400],
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 20),
+                SizedBox(height: isTablet ? 24 : 20),
 
-              // List of Transactions
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: widget.transactions.length > 10 ? 10 : widget.transactions.length,
+                // List of Transactions
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.symmetric(horizontal: isTablet ? 24 : 16),
+                  itemCount: widget.transactions.length > (isTablet ? 15 : 10) ? (isTablet ? 15 : 10) : widget.transactions.length,
                   itemBuilder: (context, index) {
                     final t = widget.transactions[index];
                     return Dismissible(
@@ -259,11 +300,11 @@ class _MainScreenState extends State<MainScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 20),
-                        child: const Icon(
+                        padding: EdgeInsets.only(right: isTablet ? 24 : 20),
+                        child: Icon(
                           Icons.edit_outlined,
                           color: Colors.green,
-                          size: 30,
+                          size: isTablet ? 36 : 30,
                         ),
                       ),
                       secondaryBackground: Container(
@@ -272,11 +313,11 @@ class _MainScreenState extends State<MainScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.only(left: 20),
-                        child: const Icon(
+                        padding: EdgeInsets.only(left: isTablet ? 24 : 20),
+                        child: Icon(
                           Icons.delete_outline,
                           color: Colors.red,
-                          size: 30,
+                          size: isTablet ? 36 : 30,
                         ),
                       ),
                       confirmDismiss: (direction) async {
@@ -323,7 +364,12 @@ class _MainScreenState extends State<MainScreen> {
                             await apiService.deleteExpense(widget.user.id, t.expenseName);
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Expense deleted successfully')),
+                                SnackBar(
+                                  content: const Text('Expense deleted successfully'),
+                                  backgroundColor: Colors.green[600],
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
                               );
                               if (widget.refreshTransactions != null) {
                                 await widget.refreshTransactions!();
@@ -332,110 +378,142 @@ class _MainScreenState extends State<MainScreen> {
                           } catch (e) {
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error deleting expense: $e')),
+                                SnackBar(
+                                  content: Text('Error deleting expense: $e'),
+                                  backgroundColor: Colors.red[600],
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
                               );
                             }
                           }
                         }
                       },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 16.0),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.grey[200]!,
-                                blurRadius: 10,
-                                offset: const Offset(0, 4)),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 50,
-                                      height: 50,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            t.color.withOpacity(0.2),
-                                            t.color.withOpacity(0.1)
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(t.icon, color: t.color),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(t.expenseName,
-                                              style: const TextStyle(
-                                                  fontSize: 16,
-                                                  color: Colors.black87,
-                                                  fontWeight: FontWeight.w600),
-                                              overflow: TextOverflow.ellipsis),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                              '${t.date.day}/${t.date.month}/${t.date.year}',
-                                              style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: Colors.grey[600])),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '${t.type == TransactionType.income ? '+' : '-'}\$${t.amount.toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: t.color,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: t.color.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      t.category.categoryName.toUpperCase(),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: t.color,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                      child: GestureDetector(
+                        onTap: () => _toggleTransactionExpansion(t.id),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                          margin: EdgeInsets.only(bottom: isTablet ? 20.0 : 16.0),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Colors.grey[200]!,
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4)),
                             ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(isTablet ? 20.0 : 16.0),
+                            child: Row(
+                              children: [
+                                // Icon Container
+                                Container(
+                                  width: isTablet ? 60 : 50,
+                                  height: isTablet ? 60 : 50,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        t.color.withOpacity(0.2),
+                                        t.color.withOpacity(0.1)
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(t.icon, color: t.color, size: isTablet ? 28 : 24),
+                                ),
+                                SizedBox(width: isTablet ? 20 : 16),
+                                
+                                // Transaction Details - Flexible
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        t.expenseName,
+                                        style: TextStyle(
+                                          fontSize: isTablet ? 18 : 16,
+                                          color: Colors.black87,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        overflow: _expandedTransactions.contains(t.id) 
+                                            ? null 
+                                            : TextOverflow.ellipsis,
+                                        maxLines: _expandedTransactions.contains(t.id) 
+                                            ? null 
+                                            : 1,
+                                      ),
+                                      SizedBox(height: isTablet ? 6 : 4),
+                                      Text(
+                                        '${t.date.day}/${t.date.month}/${t.date.year}',
+                                        style: TextStyle(
+                                          fontSize: isTablet ? 16 : 14,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                
+                                // Amount and Category - Fixed width with constraints
+                                SizedBox(
+                                  width: isTablet ? 120 : 100,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '${t.type == TransactionType.income ? '+' : '-'}\$${t.amount.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: isTablet ? 18 : 16,
+                                          color: t.color,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                      SizedBox(height: isTablet ? 6 : 4),
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: isTablet ? 10 : 8,
+                                          vertical: isTablet ? 6 : 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: t.color.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          t.category.categoryName.toUpperCase(),
+                                          style: TextStyle(
+                                            fontSize: isTablet ? 14 : 12,
+                                            color: t.color,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     );
                   },
                 ),
-              ),
-            ],
+                
+                // Bottom padding to prevent FAB from hiding content
+                SizedBox(height: isTablet ? 120 : 100),
+              ],
+            ),
           ),
         ),
       ),
@@ -515,55 +593,81 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _buildBalanceCard(
       String title, double amount, IconData icon, Color color) {
-    return Container(
-      width: 150,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 18, color: color),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '\$${amount.toStringAsFixed(2)}',
-            style: TextStyle(
-              color: color,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final isDesktop = screenSize.width > 900;
+    
+    return GestureDetector(
+      onTap: () => _toggleBalanceCardExpansion(title),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        width: isDesktop ? 180 : isTablet ? 160 : 150,
+        padding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 20 : 16, 
+          vertical: isTablet ? 20 : 16
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(isTablet ? 24 : 20),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: isTablet ? 44 : 36,
+                  height: isTablet ? 44 : 36,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: isTablet ? 22 : 18, color: color),
+                ),
+                SizedBox(width: isTablet ? 10 : 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: isTablet ? 16 : 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: _expandedBalanceCards.contains(title) 
+                        ? null 
+                        : TextOverflow.ellipsis,
+                    maxLines: _expandedBalanceCards.contains(title) 
+                        ? null 
+                        : 1,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: isTablet ? 16 : 12),
+            Text(
+              '\$${amount.toStringAsFixed(2)}',
+              style: TextStyle(
+                color: color,
+                fontSize: isTablet ? 24 : 20,
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: _expandedBalanceCards.contains(title) 
+                  ? null 
+                  : TextOverflow.ellipsis,
+              maxLines: _expandedBalanceCards.contains(title) 
+                  ? null 
+                  : 1,
+            ),
+          ],
+        ),
       ),
     );
   }

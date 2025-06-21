@@ -139,48 +139,6 @@ class ProfilePage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  _buildProfileCard(
-                    title: 'Account Settings',
-                    children: [
-                      _buildInfoTile(
-                        icon: Icons.lock_outline,
-                        title: 'Change Password',
-                        subtitle: 'Update your password',
-                        onTap: () {},
-                      ),
-                      _buildInfoTile(
-                        icon: Icons.notifications_outlined,
-                        title: 'Notifications',
-                        subtitle: 'Manage your notifications',
-                        onTap: () {},
-                      ),
-                      _buildInfoTile(
-                        icon: Icons.language_outlined,
-                        title: 'Language',
-                        subtitle: 'English',
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildProfileCard(
-                    title: 'Support',
-                    children: [
-                      _buildInfoTile(
-                        icon: Icons.help_outline,
-                        title: 'Help Center',
-                        subtitle: 'Get help with your account',
-                        onTap: () {},
-                      ),
-                      _buildInfoTile(
-                        icon: Icons.info_outline,
-                        title: 'About',
-                        subtitle: 'Learn more about Wallet Watchers',
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 24),
                   // Logout Button
                   Container(

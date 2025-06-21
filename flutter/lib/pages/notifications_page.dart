@@ -35,7 +35,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to respond: $e")),
+        SnackBar(
+          content: Text("Failed to respond: $e"),
+          backgroundColor: Colors.red[600],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
       );
     }
   }

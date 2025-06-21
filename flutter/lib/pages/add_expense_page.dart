@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
 import 'package:wallet_watchers_app/models/category.dart';
 import 'package:wallet_watchers_app/providers/categories_provider.dart';
+import 'package:wallet_watchers_app/pages/ReceiptScanPage.dart';
 
 class AddExpensePage extends StatefulWidget {
   final ApiService apiService;
@@ -72,7 +73,12 @@ class _AddExpensePageState extends State<AddExpensePage> {
         await widget.apiService.updateExpense(transaction);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Expense updated!')),
+            SnackBar(
+              content: const Text('Expense updated!'),
+              backgroundColor: Colors.green[600],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
           );
         }
       } else {
@@ -84,7 +90,12 @@ class _AddExpensePageState extends State<AddExpensePage> {
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Expense added!')),
+            SnackBar(
+              content: const Text('Expense added!'),
+              backgroundColor: Colors.green[600],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
           );
         }
       }
@@ -92,7 +103,12 @@ class _AddExpensePageState extends State<AddExpensePage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
         );
       }
     } finally {
@@ -102,6 +118,10 @@ class _AddExpensePageState extends State<AddExpensePage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final isDesktop = screenSize.width > 900;
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -112,7 +132,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(isDesktop ? 32.0 : isTablet ? 28.0 : 24.0),
           child: Consumer<CategoriesProvider>(
             builder: (context, categoriesProvider, _) {
               if (categoriesProvider.isLoading) {
@@ -141,10 +161,13 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   children: [
                     // Amount Input
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 20 : 16, 
+                        vertical: isTablet ? 12 : 8
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.grey[200]!,
@@ -161,8 +184,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
                           labelStyle: TextStyle(color: Colors.grey),
                         ),
                         keyboardType: TextInputType.number,
-                        style: const TextStyle(
-                          fontSize: 24,
+                        style: TextStyle(
+                          fontSize: isTablet ? 28 : 24,
                           fontWeight: FontWeight.bold,
                         ),
                         initialValue: _amount?.toString(),
@@ -172,14 +195,17 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         onSaved: (v) => _amount = double.parse(v!),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: isTablet ? 32 : 24),
 
                     // Expense Name Input
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 20 : 16, 
+                        vertical: isTablet ? 12 : 8
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.grey[200]!,
@@ -200,14 +226,17 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         enabled: widget.initialExpense == null,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: isTablet ? 32 : 24),
 
                     // Date Picker
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 20 : 16, 
+                        vertical: isTablet ? 12 : 8
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.grey[200]!,
@@ -218,24 +247,42 @@ class _AddExpensePageState extends State<AddExpensePage> {
                       ),
                       child: ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Date'),
-                        subtitle: Text(_date != null ? _date!.toLocal().toString().split(' ')[0] : ''),
+                        title: Text(
+                          'Date',
+                          style: TextStyle(
+                            fontSize: isTablet ? 16 : 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        subtitle: Text(
+                          _date != null ? _date!.toLocal().toString().split(' ')[0] : '',
+                          style: TextStyle(
+                            fontSize: isTablet ? 14 : 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
                         trailing: IconButton(
-                          icon: const Icon(Icons.calendar_today),
+                          icon: Icon(
+                            Icons.calendar_today,
+                            size: isTablet ? 24 : 20,
+                          ),
                           onPressed: widget.initialExpense == null ? _pickDate : null,
                         ),
                         onTap: widget.initialExpense == null ? _pickDate : null,
                         enabled: widget.initialExpense == null,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: isTablet ? 32 : 24),
 
                     // Category Dropdown
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 20 : 16, 
+                        vertical: isTablet ? 12 : 8
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.grey[200]!,
@@ -254,44 +301,106 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         items: categories.map((cat) {
                           return DropdownMenuItem(
                             value: cat,
-                            child: Text(cat.categoryName),
+                            child: Text(
+                              cat.categoryName,
+                              style: TextStyle(
+                                fontSize: isTablet ? 16 : 14,
+                              ),
+                            ),
                           );
                         }).toList(),
                         onChanged: widget.initialExpense == null ? (cat) => setState(() => _category = cat) : null,
                         validator: (cat) => cat == null ? 'Select a category' : null,
                         onSaved: (cat) => _category = cat,
-                        disabledHint: _category != null ? Text(_category!.categoryName) : null,
+                        disabledHint: _category != null ? Text(
+                          _category!.categoryName,
+                          style: TextStyle(
+                            fontSize: isTablet ? 16 : 14,
+                          ),
+                        ) : null,
                       ),
                     ),
-                    const SizedBox(height: 40),
+                    SizedBox(height: isTablet ? 50 : 40),
+
+                    // Receipt Scanning Button (only show when adding new expense)
+                    if (widget.initialExpense == null) ...[
+                      Container(
+                        width: double.infinity,
+                        height: isTablet ? 64 : 56,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey[200]!,
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ReceiptScanPage(),
+                              ),
+                            );
+                          },
+                          icon: Icon(
+                            Icons.document_scanner,
+                            size: isTablet ? 24 : 20,
+                            color: Colors.blue[600],
+                          ),
+                          label: Text(
+                            'Scan Receipt',
+                            style: TextStyle(
+                              fontSize: isTablet ? 18 : 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blue[600],
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.blue[600],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
+                              side: BorderSide(color: Colors.blue[200]!, width: 1),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: isTablet ? 24 : 20),
+                    ],
 
                     // Submit Button
                     SizedBox(
                       width: double.infinity,
-                      height: 56,
+                      height: isTablet ? 64 : 56,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _submit,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red[400],
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
                           ),
                           elevation: 0,
                         ),
                         child: _isLoading
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
+                            ? SizedBox(
+                                width: isTablet ? 28 : 24,
+                                height: isTablet ? 28 : 24,
+                                child: const CircularProgressIndicator(
                                   color: Colors.white,
                                   strokeWidth: 2,
                                 ),
                               )
                             : Text(
                                 widget.initialExpense != null ? 'Update Expense' : 'Add Expense',
-                                style: const TextStyle(
-                                  fontSize: 18,
+                                style: TextStyle(
+                                  fontSize: isTablet ? 20 : 18,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

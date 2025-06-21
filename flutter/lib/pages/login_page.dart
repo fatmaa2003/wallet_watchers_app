@@ -50,7 +50,9 @@ class _LoginPageState extends State<LoginPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error: ${e.toString()}'),
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.red[600],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           );
         }
@@ -66,6 +68,10 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final isDesktop = screenSize.width > 900;
+    
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -80,17 +86,17 @@ class _LoginPageState extends State<LoginPage> {
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(isDesktop ? 32.0 : isTablet ? 28.0 : 24.0),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 40),
+                  SizedBox(height: isTablet ? 60 : 40),
                   // Logo and Title
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: isTablet ? 100 : 80,
+                    height: isTablet ? 100 : 80,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [Colors.blue[400]!, Colors.blue[600]!],
@@ -110,33 +116,33 @@ class _LoginPageState extends State<LoginPage> {
                       child: ClipOval(
                         child: Image.asset(
                           'assets/logo/app_logo.png',
-                          width: 200,
-                          height: 200,
+                          width: isTablet ? 250 : 200,
+                          height: isTablet ? 250 : 200,
                           fit: BoxFit.contain,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
+                  SizedBox(height: isTablet ? 32 : 24),
+                  Text(
                     'Welcome Back!',
                     style: TextStyle(
-                      fontSize: 32,
+                      fontSize: isTablet ? 40 : 32,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: isTablet ? 12 : 8),
                   Text(
                     'Sign in to continue',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: isTablet ? 20 : 16,
                       color: Colors.grey[600],
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 40),
+                  SizedBox(height: isTablet ? 50 : 40),
 
                   // Email Field
                   _buildTextField(
@@ -154,7 +160,7 @@ class _LoginPageState extends State<LoginPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: isTablet ? 20 : 16),
 
                   // Password Field
                   _buildTextField(
@@ -168,6 +174,7 @@ class _LoginPageState extends State<LoginPage> {
                             ? CupertinoIcons.eye_slash
                             : CupertinoIcons.eye,
                         color: Colors.grey[600],
+                        size: isTablet ? 24 : 20,
                       ),
                       onPressed: () {
                         setState(() {
@@ -182,7 +189,7 @@ class _LoginPageState extends State<LoginPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: isTablet ? 32 : 24),
 
                   // Forgot Password Link
                   Align(
@@ -196,11 +203,12 @@ class _LoginPageState extends State<LoginPage> {
                         style: TextStyle(
                           color: Colors.blue[400],
                           fontWeight: FontWeight.w500,
+                          fontSize: isTablet ? 16 : 14,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: isTablet ? 32 : 24),
 
                   // Login Button
                   ElevatedButton(
@@ -208,31 +216,31 @@ class _LoginPageState extends State<LoginPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[400],
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: EdgeInsets.symmetric(vertical: isTablet ? 20 : 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
                       ),
                       elevation: 2,
                     ),
                     child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
+                        ? SizedBox(
+                            height: isTablet ? 24 : 20,
+                            width: isTablet ? 24 : 20,
+                            child: const CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor:
                                   AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : const Text(
+                        : Text(
                             'Login',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: isTablet ? 18 : 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: isTablet ? 32 : 24),
 
                   // Sign Up Link
                   Row(
@@ -242,6 +250,7 @@ class _LoginPageState extends State<LoginPage> {
                         'Don\'t have an account? ',
                         style: TextStyle(
                           color: Colors.grey[600],
+                          fontSize: isTablet ? 16 : 14,
                         ),
                       ),
                       TextButton(
@@ -253,6 +262,7 @@ class _LoginPageState extends State<LoginPage> {
                           style: TextStyle(
                             color: Colors.blue[400],
                             fontWeight: FontWeight.bold,
+                            fontSize: isTablet ? 16 : 14,
                           ),
                         ),
                       ),
@@ -276,10 +286,13 @@ class _LoginPageState extends State<LoginPage> {
     Widget? suffixIcon,
     String? Function(String?)? validator,
   }) {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
       ),
       child: TextFormField(
         controller: controller,
@@ -290,17 +303,18 @@ class _LoginPageState extends State<LoginPage> {
           prefixIcon: Icon(
             icon,
             color: Colors.blue[400],
+            size: isTablet ? 24 : 20,
           ),
           suffixIcon: suffixIcon,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
             borderSide: BorderSide.none,
           ),
           filled: true,
           fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: isTablet ? 20 : 16,
+            vertical: isTablet ? 20 : 16,
           ),
         ),
         validator: validator,

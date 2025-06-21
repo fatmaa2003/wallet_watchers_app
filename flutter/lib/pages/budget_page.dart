@@ -54,7 +54,12 @@ class _BudgetPageState extends State<BudgetPage> {
       final budget = result['budget'];
 
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+          .showSnackBar(SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.green[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ));
 
       if (budget != null &&
           budget['total'] != null &&
@@ -82,7 +87,12 @@ class _BudgetPageState extends State<BudgetPage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Error: $e")),
+        SnackBar(
+          content: Text("❌ Error: $e"),
+          backgroundColor: Colors.red[600],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
       );
     } finally {
       setState(() => _isLoading = false);

@@ -316,14 +316,16 @@ class _CollaborativeGoalsPageState extends State<CollaborativeGoalsPage> {
           if (goals.isEmpty) {
             return const Center(child: Text("No collaborative goals yet."));
           }
-          return ListView(children: goals.map(_buildGoalCard).toList());
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 80.0),
+            child: ListView(children: goals.map(_buildGoalCard).toList()),
+          );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: _showAddGoalDialog,
         backgroundColor: Colors.lightBlueAccent,
-        icon: const Icon(Icons.add),
-        label: const Text("New Collaborative Goal"),
+        child: const Icon(Icons.add),
       ),
     );
   }

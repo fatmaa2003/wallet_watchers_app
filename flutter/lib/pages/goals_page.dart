@@ -98,7 +98,12 @@ class _GoalsPageState extends State<GoalsPage> {
               } catch (e) {
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to create goal: $e')),
+                  SnackBar(
+                    content: Text('Failed to create goal: $e'),
+                    backgroundColor: Colors.red[600],
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
                 );
               }
             },
@@ -238,12 +243,7 @@ class _GoalsPageState extends State<GoalsPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => HomePage(user: widget.user),
-              ),
-            );
+            Navigator.pop(context);
           },
         ),
       ),
@@ -262,35 +262,37 @@ class _GoalsPageState extends State<GoalsPage> {
           final activeGoals = goals.where((g) => !g.isAchieved).toList();
           final achievedGoals = goals.where((g) => g.isAchieved).toList();
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              if (activeGoals.isNotEmpty) ...[
-                const Text(
-                  "Active Goals",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                ...activeGoals.map((goal) => _buildGoalCard(goal)).toList(),
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 80.0),
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                if (activeGoals.isNotEmpty) ...[
+                  const Text(
+                    "Active Goals",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  ...activeGoals.map((goal) => _buildGoalCard(goal)).toList(),
+                ],
+                if (achievedGoals.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  const Text(
+                    "Achieved Goals",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  ...achievedGoals.map((goal) => _buildGoalCard(goal)).toList(),
+                ],
               ],
-              if (achievedGoals.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                const Text(
-                  "Achieved Goals",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                ...achievedGoals.map((goal) => _buildGoalCard(goal)).toList(),
-              ],
-            ],
+            ),
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.lightBlueAccent,
         onPressed: _showAddGoalDialog,
-        icon: const Icon(Icons.add),
-        label: const Text("New Goal"),
+        child: const Icon(Icons.add),
       ),
     );
   }

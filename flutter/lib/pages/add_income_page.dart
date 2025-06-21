@@ -28,14 +28,24 @@ class _AddIncomePageState extends State<AddIncomePage> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Income added!')),
+          SnackBar(
+            content: const Text('Income added!'),
+            backgroundColor: Colors.green[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
         );
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
         );
       }
     } finally {
@@ -45,6 +55,10 @@ class _AddIncomePageState extends State<AddIncomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final isDesktop = screenSize.width > 900;
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -55,7 +69,7 @@ class _AddIncomePageState extends State<AddIncomePage> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(isDesktop ? 32.0 : isTablet ? 28.0 : 24.0),
           child: Form(
             key: _formKey,
             child: Column(
@@ -63,10 +77,13 @@ class _AddIncomePageState extends State<AddIncomePage> {
               children: [
                 // Amount Input
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isTablet ? 20 : 16, 
+                    vertical: isTablet ? 12 : 8
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.grey[200]!,
@@ -83,8 +100,8 @@ class _AddIncomePageState extends State<AddIncomePage> {
                       labelStyle: TextStyle(color: Colors.grey),
                     ),
                     keyboardType: TextInputType.number,
-                    style: const TextStyle(
-                      fontSize: 24,
+                    style: TextStyle(
+                      fontSize: isTablet ? 28 : 24,
                       fontWeight: FontWeight.bold,
                     ),
                     validator: (v) => v == null || double.tryParse(v) == null || double.parse(v) <= 0
@@ -93,14 +110,17 @@ class _AddIncomePageState extends State<AddIncomePage> {
                     onSaved: (v) => _amount = double.parse(v!),
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: isTablet ? 32 : 24),
 
                 // Description Input
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isTablet ? 20 : 16, 
+                    vertical: isTablet ? 12 : 8
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.grey[200]!,
@@ -119,35 +139,35 @@ class _AddIncomePageState extends State<AddIncomePage> {
                     onSaved: (v) => _description = v,
                   ),
                 ),
-                const SizedBox(height: 40),
+                SizedBox(height: isTablet ? 50 : 40),
 
                 // Submit Button
                 SizedBox(
                   width: double.infinity,
-                  height: 56,
+                  height: isTablet ? 64 : 56,
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green[400],
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
                       ),
                       elevation: 0,
                     ),
                     child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
+                        ? SizedBox(
+                            width: isTablet ? 28 : 24,
+                            height: isTablet ? 28 : 24,
+                            child: const CircularProgressIndicator(
                               color: Colors.white,
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text(
+                        : Text(
                             'Add Income',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: isTablet ? 20 : 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

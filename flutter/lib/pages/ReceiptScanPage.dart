@@ -46,7 +46,12 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
+        SnackBar(
+          content: Text('Error picking image: $e'),
+          backgroundColor: Colors.red[600],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
       );
     }
   }
@@ -73,7 +78,12 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> {
       textRecognizer.close();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error processing image: $e')),
+        SnackBar(
+          content: Text('Error processing image: $e'),
+          backgroundColor: Colors.red[600],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
       );
     } finally {
       setState(() {
@@ -85,15 +95,23 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> {
   Future<void> _saveReceipt() async {
     if (_extractedText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No text extracted')),
+        SnackBar(
+          content: const Text('No text extracted'),
+          backgroundColor: Colors.orange[600],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
       );
       return;
     }
 
     if (_apiService.userId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('User ID not found. Receipt will not be saved.'),
+        SnackBar(
+          content: const Text('User ID not found. Receipt will not be saved.'),
+          backgroundColor: Colors.orange[600],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
       return;
@@ -102,14 +120,24 @@ class _ReceiptScanPageState extends State<ReceiptScanPage> {
     try {
       await _apiService.saveReceipt(_extractedText);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Receipt saved successfully')),
+        SnackBar(
+          content: const Text('Receipt saved successfully'),
+          backgroundColor: Colors.green[600],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
       );
       // Navigate to HomePage
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       print('Save receipt error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red[600],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
       );
     }
   }

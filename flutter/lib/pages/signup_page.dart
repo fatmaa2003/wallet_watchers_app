@@ -55,7 +55,9 @@ class _SignUpPageState extends State<SignUpPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error: ${e.toString()}'),
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.red[600],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           );
         }
@@ -71,6 +73,10 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    final isDesktop = screenSize.width > 900;
+    
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -85,17 +91,17 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(isDesktop ? 32.0 : isTablet ? 28.0 : 24.0),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 40),
+                  SizedBox(height: isTablet ? 60 : 40),
                   // Logo and Title
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: isTablet ? 100 : 80,
+                    height: isTablet ? 100 : 80,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [Colors.blue[400]!, Colors.blue[600]!],
@@ -115,33 +121,33 @@ class _SignUpPageState extends State<SignUpPage> {
                       child: ClipOval(
                         child: Image.asset(
                           'assets/logo/app_logo.png',
-                          width: 200,
-                          height: 200,
+                          width: isTablet ? 250 : 200,
+                          height: isTablet ? 250 : 200,
                           fit: BoxFit.contain,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
+                  SizedBox(height: isTablet ? 32 : 24),
+                  Text(
                     'Create Account',
                     style: TextStyle(
-                      fontSize: 32,
+                      fontSize: isTablet ? 40 : 32,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: isTablet ? 12 : 8),
                   Text(
                     'Join Wallet Watchers today!',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: isTablet ? 20 : 16,
                       color: Colors.grey[600],
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 40),
+                  SizedBox(height: isTablet ? 50 : 40),
 
                   // First Name Field
                   _buildTextField(
@@ -155,7 +161,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: isTablet ? 20 : 16),
 
                   // Last Name Field
                   _buildTextField(
@@ -169,7 +175,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: isTablet ? 20 : 16),
 
                   // Email Field
                   _buildTextField(
@@ -187,7 +193,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: isTablet ? 20 : 16),
 
                   // Password Field
                   _buildTextField(
@@ -201,6 +207,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             ? CupertinoIcons.eye_slash
                             : CupertinoIcons.eye,
                         color: Colors.grey[600],
+                        size: isTablet ? 24 : 20,
                       ),
                       onPressed: () {
                         setState(() {
@@ -218,7 +225,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: isTablet ? 20 : 16),
 
                   // Phone Number Field
                   _buildTextField(
@@ -236,7 +243,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: isTablet ? 40 : 32),
 
                   // Sign Up Button
                   ElevatedButton(
@@ -244,31 +251,31 @@ class _SignUpPageState extends State<SignUpPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[400],
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: EdgeInsets.symmetric(vertical: isTablet ? 20 : 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
                       ),
                       elevation: 2,
                     ),
                     child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
+                        ? SizedBox(
+                            height: isTablet ? 24 : 20,
+                            width: isTablet ? 24 : 20,
+                            child: const CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor:
                                   AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : const Text(
+                        : Text(
                             'Sign Up',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: isTablet ? 18 : 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: isTablet ? 32 : 24),
 
                   // Login Link
                   Row(
@@ -278,6 +285,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         'Already have an account? ',
                         style: TextStyle(
                           color: Colors.grey[600],
+                          fontSize: isTablet ? 16 : 14,
                         ),
                       ),
                       TextButton(
@@ -289,6 +297,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           style: TextStyle(
                             color: Colors.blue[400],
                             fontWeight: FontWeight.bold,
+                            fontSize: isTablet ? 16 : 14,
                           ),
                         ),
                       ),
@@ -312,10 +321,13 @@ class _SignUpPageState extends State<SignUpPage> {
     Widget? suffixIcon,
     String? Function(String?)? validator,
   }) {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+    
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
       ),
       child: TextFormField(
         controller: controller,
@@ -326,17 +338,18 @@ class _SignUpPageState extends State<SignUpPage> {
           prefixIcon: Icon(
             icon,
             color: Colors.blue[400],
+            size: isTablet ? 24 : 20,
           ),
           suffixIcon: suffixIcon,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
             borderSide: BorderSide.none,
           ),
           filled: true,
           fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: isTablet ? 20 : 16,
+            vertical: isTablet ? 20 : 16,
           ),
         ),
         validator: validator,
