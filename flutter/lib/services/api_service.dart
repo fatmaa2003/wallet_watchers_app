@@ -857,4 +857,34 @@ class ApiService {
       throw Exception('Failed to delete income: [${response.statusCode}] - ${response.body}');
     }
   }
+
+  Future<List<Transaction>> getCardExpenses(String userId, String cardNumber) async {
+    try {
+      print('Fetching card expenses for userId: $userId, cardNumber: $cardNumber');
+      
+      final response = await http.get(
+        Uri.parse('$baseUrl/expenses/getCardExpenses/$userId/$cardNumber'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+        print('Parsed data: $data');
+        return data.map((json) => Transaction.fromJson(json, TransactionType.expense)).toList();
+      } else if (response.statusCode == 404) {
+        // No expenses found for this card, return empty list
+        print('No expenses found for card, returning empty list');
+        return [];
+      } else {
+        print('Error response: ${response.statusCode} - ${response.body}');
+        throw Exception('Failed to load card expenses: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Exception in getCardExpenses: $e');
+      throw Exception('Failed to load card expenses: $e');
+    }
+  }
 }

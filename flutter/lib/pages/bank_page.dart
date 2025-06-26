@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wallet_watchers_app/models/user.dart';
+import 'package:wallet_watchers_app/models/transaction.dart';
 import 'package:wallet_watchers_app/nav/bottom_nav_bar.dart';
 import 'package:wallet_watchers_app/services/api_service.dart';
 
@@ -257,228 +258,389 @@ class _BankPageState extends State<BankPage> {
       }
     }
 
-    return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: isTablet ? 20 : 16, 
-        vertical: isTablet ? 12 : 8
-      ),
-      height: isTablet ? 240 : 200,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF1E3A8A), // Deep blue
-            const Color(0xFF3B82F6), // Bright blue
-            const Color(0xFF60A5FA), // Light blue
-          ],
-          stops: const [0.0, 0.5, 1.0],
-        ),
-        borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF3B82F6).withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Background Elements
-          Positioned(
-            right: isTablet ? -25 : -20,
-            top: isTablet ? -25 : -20,
-            child: Container(
-              width: isTablet ? 180 : 150,
-              height: isTablet ? 180 : 150,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1),
+    return GestureDetector(
+      onTap: () async {
+        try {
+          final transactions = await _apiService.getCardExpenses(widget.user.id, cardNumber);
+          
+          if (transactions.isEmpty) {
+            // Show no transactions modal
+            showModalBottomSheet(
+              context: context,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
-            ),
-          ),
-          Positioned(
-            left: isTablet ? -35 : -30,
-            bottom: isTablet ? -35 : -30,
-            child: Container(
-              width: isTablet ? 140 : 120,
-              height: isTablet ? 140 : 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1),
-              ),
-            ),
-          ),
-          // Card Content
-          Padding(
-            padding: EdgeInsets.all(isTablet ? 24 : 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Top Row: Card Name and Chip
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (cardName.isNotEmpty)
-                      Text(
-                        cardName.toUpperCase(),
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: isTablet ? 16 : 14,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    Container(
-                      width: isTablet ? 48 : 40,
-                      height: isTablet ? 36 : 30,
-                      decoration: BoxDecoration(
-                        color: Colors.amber[100],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.credit_card,
-                          color: Colors.amber[800],
-                          size: isTablet ? 24 : 20,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                // Card Number
-                Text(
-                  '•••• •••• •••• ${cardNumber.split('-').last}',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isTablet ? 24 : 20,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'Roboto',
-                  ),
-                ),
-                const Spacer(),
-                // Bottom Row: Card Holder and Expiry
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Card Holder
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              builder: (context) {
+                return Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Icon(Icons.receipt_long, size: 48, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
                         Text(
-                          cardHolder,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: isTablet ? 16 : 14,
-                            letterSpacing: 0.5,
-                            fontWeight: FontWeight.w500,
+                          'No transactions found',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'This card has no associated expenses yet.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue[600],
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('Close'),
                           ),
                         ),
                       ],
                     ),
-                    // Expiry Date
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
+                  ),
+                );
+              },
+            );
+          } else {
+            // Show transactions modal
+            showModalBottomSheet(
+              context: context,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              builder: (context) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Transactions for $cardName',
+                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 300,
+                        child: ListView.separated(
+                          itemCount: transactions.length,
+                          separatorBuilder: (_, __) => const Divider(),
+                          itemBuilder: (context, idx) {
+                            final tx = transactions[idx];
+                            return ListTile(
+                              leading: const Icon(Icons.payments, color: Colors.blueAccent),
+                              title: Text(tx.expenseName),
+                              subtitle: Text(
+                                'Category: ${tx.category.categoryName}\nDate: ${tx.date != null ? tx.date.toLocal().toString().split(' ')[0] : '-'}',
+                              ),
+                              trailing: Text(
+                                '-\$${tx.amount.toStringAsFixed(2)}',
+                                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          }
+        } catch (e) {
+          // Show error modal
+          showModalBottomSheet(
+            context: context,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (context) {
+              return Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Error loading transactions',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '$e',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red[600],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text('Close'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        }
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(
+          horizontal: isTablet ? 20 : 16, 
+          vertical: isTablet ? 12 : 8
+        ),
+        height: isTablet ? 240 : 200,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF1E3A8A), // Deep blue
+              const Color(0xFF3B82F6), // Bright blue
+              const Color(0xFF60A5FA), // Light blue
+            ],
+            stops: const [0.0, 0.5, 1.0],
+          ),
+          borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF3B82F6).withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Background Elements
+            Positioned(
+              right: isTablet ? -25 : -20,
+              top: isTablet ? -25 : -20,
+              child: Container(
+                width: isTablet ? 180 : 150,
+                height: isTablet ? 180 : 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.1),
+                ),
+              ),
+            ),
+            Positioned(
+              left: isTablet ? -35 : -30,
+              bottom: isTablet ? -35 : -30,
+              child: Container(
+                width: isTablet ? 140 : 120,
+                height: isTablet ? 140 : 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.1),
+                ),
+              ),
+            ),
+            // Card Content
+            Padding(
+              padding: EdgeInsets.all(isTablet ? 24 : 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top Row: Card Name and Chip
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (cardName.isNotEmpty)
                         Text(
-                          'EXPIRES',
+                          cardName.toUpperCase(),
                           style: TextStyle(
                             color: Colors.white70,
-                            fontSize: isTablet ? 12 : 10,
-                            letterSpacing: 1,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(height: isTablet ? 6 : 4),
-                        Text(
-                          formattedExpiryDate,
-                          style: TextStyle(
-                            color: Colors.white,
                             fontSize: isTablet ? 16 : 14,
-                            letterSpacing: 0.5,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1,
                           ),
                         ),
-                      ],
+                      Container(
+                        width: isTablet ? 48 : 40,
+                        height: isTablet ? 36 : 30,
+                        decoration: BoxDecoration(
+                          color: Colors.amber[100],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.credit_card,
+                            color: Colors.amber[800],
+                            size: isTablet ? 24 : 20,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  // Card Number
+                  Text(
+                    '•••• •••• •••• ${cardNumber.split('-').last}',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: isTablet ? 24 : 20,
+                      letterSpacing: 2,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Roboto',
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const Spacer(),
+                  // Bottom Row: Card Holder and Expiry
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Card Holder
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            cardHolder,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isTablet ? 16 : 14,
+                              letterSpacing: 0.5,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Expiry Date
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'EXPIRES',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: isTablet ? 12 : 10,
+                              letterSpacing: 1,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: isTablet ? 6 : 4),
+                          Text(
+                            formattedExpiryDate,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isTablet ? 16 : 14,
+                              letterSpacing: 0.5,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          // Delete Button
-          Positioned(
-            top: isTablet ? 12 : 8,
-            right: isTablet ? 12 : 8,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Delete Card'),
-                      content: const Text('Are you sure you want to delete this card?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirm == true) {
-                    try {
-                      await _apiService.deleteCard(widget.user.id, cardName);
-                      _loadCards();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Card deleted successfully'),
-                            backgroundColor: Colors.green[600],
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            // Delete Button
+            Positioned(
+              top: isTablet ? 12 : 8,
+              right: isTablet ? 12 : 8,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Delete Card'),
+                        content: const Text('Are you sure you want to delete this card?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
                           ),
-                        );
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error deleting card: $e'),
-                            backgroundColor: Colors.red[600],
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Delete', style: TextStyle(color: Colors.red)),
                           ),
-                        );
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      try {
+                        await _apiService.deleteCard(widget.user.id, cardName);
+                        _loadCards();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Card deleted successfully'),
+                              backgroundColor: Colors.green[600],
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error deleting card: $e'),
+                              backgroundColor: Colors.red[600],
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          );
+                        }
                       }
                     }
-                  }
-                },
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: EdgeInsets.all(isTablet ? 10 : 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.delete_outline,
-                    color: Colors.white70,
-                    size: isTablet ? 22 : 18,
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: EdgeInsets.all(isTablet ? 10 : 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.delete_outline,
+                      color: Colors.white70,
+                      size: isTablet ? 22 : 18,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
