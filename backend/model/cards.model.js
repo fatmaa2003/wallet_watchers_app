@@ -12,9 +12,10 @@ const cardsSchema = new Schema(
       type: String,
       required: true
     },
-    cardNumber: {
+    cardNumber: { 
       type: String,
       required: true,
+      unique:true,
       validate: {
         validator: function (v) {
           return /^\d{4}-\d{4}-\d{4}-\d{4}$/.test(v);

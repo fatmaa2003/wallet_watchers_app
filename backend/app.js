@@ -14,7 +14,8 @@ app.use("/api/receipts", receiptRoute);
 app.use("/api/goals", goalRoutes);
 app.use("/api/botpress", botpressRoutes);
 app.use("/api/cards", cardsRoute);
+
 };
 
 
-module.exports = app;
+module.exports = app;   

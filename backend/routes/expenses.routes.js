@@ -11,4 +11,6 @@ router.delete("/deleteExpense", expensesController.deleteExpense);
 
 router.patch("/updateExpense", expensesController.updateExpense);
 
+router.get("/getCardExpenses/:userId/:cardNumber", expensesController.getCardExpenses);
+
 module.exports = router;

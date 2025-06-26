@@ -101,7 +101,26 @@ const getExpensesByDate = async (req, res) => {
   return res.status(200).json(expenses);
 };
 
+const getCardExpenses = async (req, res) => {
+  try {
+    const { userId, cardNumber } = req.params;
+
+    const expenses = await ExpensesService.getCardExpenses(userId, cardNumber);
+
+    if (!expenses || expenses.length === 0) {
+      return res.status(404).json({ message: "No card expenses found." });
+    }
+
+    res.status(200).json(expenses);
+  } catch (error) {
+    console.error("Controller error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
 module.exports = {
+  getCardExpenses,
   postAllExpenses,
   postExpenses,
   getExpensesByDate,

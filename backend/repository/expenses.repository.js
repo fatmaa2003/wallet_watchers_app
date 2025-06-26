@@ -171,7 +171,33 @@ const postExpenses = async ({
 //   }
 // };
 
+
+const getCardExpenses = async (userId, cardNumber) => {
+  try {
+    if (!userId) {
+      console.log("userId not provided");
+      return [];
+    }
+    if (!cardNumber) {
+      console.log("card number not provided");
+      return [];
+    }
+
+    const expenses = await Expenses.find({
+      userId: userId,
+      cardNumber: cardNumber,
+      isBank: true // filter only card/bank related
+    }).select('expenseName categoryName expenseAmount bankName');
+
+    return expenses;
+  } catch (err) {
+    console.error("Error in repository getCardExpenses:", err);
+    return [];
+  }
+};
+
 module.exports = {
+  getCardExpenses,
   postAllExpenses,
   postExpenses,
   getExpensesByDate,

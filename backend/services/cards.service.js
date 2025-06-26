@@ -18,6 +18,10 @@ const getCardsByUserId = async (userId) => {
   return await CardsRepo.getCardsByUserId(userId);
 };
 
+const getCardExpenses = async (userId, cardNumber) =>{
+
+}
+
 const deleteCard = async (userId, cardName) => {
   if (!userId || !cardName) {
     console.error("Missing userId or cardName in service");
