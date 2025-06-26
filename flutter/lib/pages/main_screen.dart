@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:wallet_watchers_app/models/transaction.dart';
 import 'package:wallet_watchers_app/models/user.dart';
-import 'package:wallet_watchers_app/pages/botpress_chat_page.dart';
 import 'package:wallet_watchers_app/menu/custom_menu.dart';
 import 'package:wallet_watchers_app/pages/add_expense_page.dart';
 import 'package:wallet_watchers_app/pages/add_income_page.dart';
@@ -130,47 +129,6 @@ class _MainScreenState extends State<MainScreen> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: isTablet ? 8 : 6, 
-                              vertical: isTablet ? 8 : 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE8F1FA),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.2),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            'Wallet Bot',
-                            style: TextStyle(
-                              fontSize: isTablet ? 14 : 12, 
-                              color: Colors.black87
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: isTablet ? 6 : 4),
-                        FloatingActionButton(
-                          heroTag: 'chatBot',
-                          tooltip: 'Open Wallet Bot',
-                          mini: !isTablet,
-                          backgroundColor: const Color(0xFF3A9EB7),
-                          elevation: 2,
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const BotpressChatPage()),
-                            );
-                          },
-                          child: Icon(Icons.smart_toy_outlined,
-                              color: Colors.white, size: isTablet ? 22 : 18),
-                        ),
-                        SizedBox(width: isTablet ? 4 : 2),
                         Builder(
                           builder: (context) => IconButton(
                             padding: EdgeInsets.zero,
@@ -293,7 +251,7 @@ class _MainScreenState extends State<MainScreen> {
                     final t = widget.transactions[index];
                     return Dismissible(
                       key: Key(t.id),
-                      direction: t.type == TransactionType.expense ? DismissDirection.horizontal : DismissDirection.none,
+                      direction: DismissDirection.horizontal,
                       background: Container(
                         decoration: BoxDecoration(
                           color: Colors.green[100],
@@ -322,26 +280,39 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                       confirmDismiss: (direction) async {
                         if (direction == DismissDirection.startToEnd) {
-                          // Swipe right - Edit expense
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AddExpensePage(
-                                apiService: ApiService(),
-                                initialExpense: t,
+                          if (t.type == TransactionType.expense) {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AddExpensePage(
+                                  apiService: ApiService(),
+                                  initialExpense: t,
+                                ),
                               ),
-                            ),
-                          );
-                          if (result == true && widget.refreshTransactions != null) {
-                            await widget.refreshTransactions!();
+                            );
+                            if (result == true && widget.refreshTransactions != null) {
+                              await widget.refreshTransactions!();
+                            }
+                          } else {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AddIncomePage(
+                                  apiService: ApiService(),
+                                  initialIncome: t,
+                                ),
+                              ),
+                            );
+                            if (result == true && widget.refreshTransactions != null) {
+                              await widget.refreshTransactions!();
+                            }
                           }
-                          return false; // Don't dismiss the item
+                          return false;
                         } else {
-                          // Swipe left - Delete expense
                           return await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('Delete Expense'),
+                              title: Text(t.type == TransactionType.expense ? 'Delete Expense' : 'Delete Income'),
                               content: Text('Are you sure you want to delete "${t.expenseName}"?'),
                               actions: [
                                 TextButton(
@@ -361,11 +332,15 @@ class _MainScreenState extends State<MainScreen> {
                         if (direction == DismissDirection.endToStart) {
                           try {
                             final apiService = ApiService();
-                            await apiService.deleteExpense(widget.user.id, t.expenseName);
+                            if (t.type == TransactionType.expense) {
+                              await apiService.deleteExpense(widget.user.id, t.expenseName);
+                            } else {
+                              await apiService.deleteIncome(widget.user.id, t.expenseName);
+                            }
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: const Text('Expense deleted successfully'),
+                                  content: Text(t.type == TransactionType.expense ? 'Expense deleted successfully' : 'Income deleted successfully'),
                                   backgroundColor: Colors.green[600],
                                   behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -379,7 +354,7 @@ class _MainScreenState extends State<MainScreen> {
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Error deleting expense: $e'),
+                                  content: Text('Error deleting ${t.type == TransactionType.expense ? 'expense' : 'income'}: $e'),
                                   backgroundColor: Colors.red[600],
                                   behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

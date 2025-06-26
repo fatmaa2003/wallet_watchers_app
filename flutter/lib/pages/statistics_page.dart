@@ -5,6 +5,7 @@ import 'package:wallet_watchers_app/models/transaction.dart';
 import 'package:wallet_watchers_app/services/api_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:wallet_watchers_app/pages/add_expense_page.dart';
+import 'package:wallet_watchers_app/pages/add_income_page.dart';
 
 class StatisticsPage extends StatefulWidget {
   final User user;
@@ -44,8 +45,17 @@ class _StatisticsPageState extends State<StatisticsPage> {
     setState(() => _isLoading = true);
     try {
       final expenses = await _apiService.getExpensesByDate(widget.user.id, date);
+      final incomes = await _apiService.fetchIncomes(widget.user.id);
+      // Filter incomes for the selected date
+      final filteredIncomes = incomes.where((income) => 
+        income.date.year == date.year && 
+        income.date.month == date.month && 
+        income.date.day == date.day
+      ).toList();
+      
       setState(() {
-        _selectedDayTransactions = expenses;
+        _selectedDayTransactions = [...expenses, ...filteredIncomes];
+        _selectedDayTransactions.sort((a, b) => b.date.compareTo(a.date)); // Sort by date, newest first
       });
     } catch (e) {
       if (mounted) {
@@ -67,7 +77,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Daily Expenses"),
+        title: const Text("Daily Transactions"),
         backgroundColor: Colors.blue[400],
         foregroundColor: Colors.white,
       ),
@@ -193,26 +203,41 @@ class _StatisticsPageState extends State<StatisticsPage> {
                             ),
                             confirmDismiss: (direction) async {
                               if (direction == DismissDirection.startToEnd) {
-                                // Swipe right - Edit expense
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AddExpensePage(
-                                      apiService: _apiService,
-                                      initialExpense: transaction,
+                                // Swipe right - Edit
+                                if (transaction.type == TransactionType.expense) {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AddExpensePage(
+                                        apiService: _apiService,
+                                        initialExpense: transaction,
+                                      ),
                                     ),
-                                  ),
-                                );
-                                if (result == true) {
-                                  await _loadTransactionsForDate(_selectedDay);
+                                  );
+                                  if (result == true) {
+                                    await _loadTransactionsForDate(_selectedDay);
+                                  }
+                                } else {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AddIncomePage(
+                                        apiService: _apiService,
+                                        initialIncome: transaction,
+                                      ),
+                                    ),
+                                  );
+                                  if (result == true) {
+                                    await _loadTransactionsForDate(_selectedDay);
+                                  }
                                 }
                                 return false; // Don't dismiss the item
                               } else {
-                                // Swipe left - Delete expense
-                                return await showDialog<bool>(
+                                // Swipe left - Delete
+                                final confirm = await showDialog<bool>(
                                   context: context,
                                   builder: (context) => AlertDialog(
-                                    title: const Text('Delete Expense'),
+                                    title: Text(transaction.type == TransactionType.expense ? 'Delete Expense' : 'Delete Income'),
                                     content: Text('Are you sure you want to delete "${transaction.expenseName}"?'),
                                     actions: [
                                       TextButton(
@@ -226,35 +251,38 @@ class _StatisticsPageState extends State<StatisticsPage> {
                                     ],
                                   ),
                                 );
-                              }
-                            },
-                            onDismissed: (direction) async {
-                              if (direction == DismissDirection.endToStart) {
-                                try {
-                                  await _apiService.deleteExpense(widget.user.id, transaction.expenseName);
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: const Text('Expense deleted successfully'),
-                                        backgroundColor: Colors.green[600],
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                      ),
-                                    );
-                                    await _loadTransactionsForDate(_selectedDay);
-                                  }
-                                } catch (e) {
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Error deleting expense: $e'),
-                                        backgroundColor: Colors.red[600],
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                      ),
-                                    );
+                                if (confirm == true) {
+                                  try {
+                                    if (transaction.type == TransactionType.expense) {
+                                      await _apiService.deleteExpense(widget.user.id, transaction.expenseName);
+                                    } else {
+                                      await _apiService.deleteIncome(widget.user.id, transaction.expenseName);
+                                    }
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(transaction.type == TransactionType.expense ? 'Expense deleted successfully' : 'Income deleted successfully'),
+                                          backgroundColor: Colors.green[600],
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                        ),
+                                      );
+                                      await _loadTransactionsForDate(_selectedDay);
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Error deleting ${transaction.type == TransactionType.expense ? 'expense' : 'income'}: $e'),
+                                          backgroundColor: Colors.red[600],
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                        ),
+                                      );
+                                    }
                                   }
                                 }
+                                return false;
                               }
                             },
                             child: GestureDetector(

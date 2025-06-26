@@ -417,29 +417,48 @@ class _BankPageState extends State<BankPage> {
               color: Colors.transparent,
               child: InkWell(
                 onTap: () async {
-                  try {
-                    await _apiService.deleteCard(widget.user.id, cardName);
-                    _loadCards();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Card deleted successfully'),
-                          backgroundColor: Colors.green[600],
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Delete Card'),
+                      content: const Text('Are you sure you want to delete this card?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancel'),
                         ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error deleting card: $e'),
-                          backgroundColor: Colors.red[600],
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Delete', style: TextStyle(color: Colors.red)),
                         ),
-                      );
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    try {
+                      await _apiService.deleteCard(widget.user.id, cardName);
+                      _loadCards();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Card deleted successfully'),
+                            backgroundColor: Colors.green[600],
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error deleting card: $e'),
+                            backgroundColor: Colors.red[600],
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        );
+                      }
                     }
                   }
                 },
@@ -506,8 +525,8 @@ class _BankPageState extends State<BankPage> {
                       vertical: isTablet ? 20 : 16,
                       horizontal: isTablet ? 8 : 0,
                     ),
-                    itemCount: _cards.length,
-                    itemBuilder: (context, index) => _buildCardWidget(_cards[index]),
+                  itemCount: _cards.length,
+                  itemBuilder: (context, index) => _buildCardWidget(_cards[index]),
                   ),
                 ),
       floatingActionButton: FloatingActionButton(

@@ -32,84 +32,110 @@ class _GoalsPageState extends State<GoalsPage> {
     final titleController = TextEditingController();
     final savedController = TextEditingController();
     final targetController = TextEditingController();
+    DateTime? _selectedTargetDate;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.blue[50],
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Add Goal'),
-        content: SingleChildScrollView(
-          child: Column(
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Goal Title',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: savedController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Saved Amount',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: targetController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Target Amount',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.flag),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.lightBlueAccent,
-            ),
-            onPressed: () async {
-              final goal = Goal(
-                id: '',
-                title: titleController.text.trim(),
-                icon: 'flag',
-                savedAmount: double.tryParse(savedController.text.trim()) ?? 0,
-                targetAmount:
-                    double.tryParse(targetController.text.trim()) ?? 0,
-                isAchieved: false,
-              );
-
-              try {
-                await _apiService.createGoal(goal);
-                _refreshGoals();
-                Navigator.of(context).pop();
-              } catch (e) {
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Failed to create goal: $e'),
-                    backgroundColor: Colors.red[600],
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: Colors.blue[50],
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Add Goal'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Goal Title',
+                    border: OutlineInputBorder(),
                   ),
-                );
-              }
-            },
-            label: const Text('Add'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: savedController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Saved Amount',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: targetController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Target Amount',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Target Date'),
+                  subtitle: Text(_selectedTargetDate != null
+                      ? _selectedTargetDate!.toLocal().toString().split(' ')[0]
+                      : 'No date selected'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) {
+                        setState(() => _selectedTargetDate = picked);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.flag),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.lightBlueAccent,
+              ),
+              onPressed: () async {
+                final goal = Goal(
+                  id: '',
+                  title: titleController.text.trim(),
+                  icon: 'flag',
+                  savedAmount: double.tryParse(savedController.text.trim()) ?? 0,
+                  targetAmount:
+                      double.tryParse(targetController.text.trim()) ?? 0,
+                  isAchieved: false,
+                  targetDate: _selectedTargetDate,
+                );
+
+                try {
+                  await _apiService.createGoal(goal);
+                  _refreshGoals();
+                  Navigator.of(context).pop();
+                } catch (e) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to create goal: $e'),
+                      backgroundColor: Colors.red[600],
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  );
+                }
+              },
+              label: const Text('Add'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -187,6 +213,13 @@ class _GoalsPageState extends State<GoalsPage> {
                     minHeight: 8,
                   ),
                   const SizedBox(height: 6),
+                  if (goal.targetDate != null)
+                    Text(
+                      'Target Date: ${goal.targetDate!.day.toString().padLeft(2, '0')}/'
+                      '${goal.targetDate!.month.toString().padLeft(2, '0')}/'
+                      '${goal.targetDate!.year.toString().substring(2)}',
+                      style: const TextStyle(fontSize: 13, color: Colors.blueGrey),
+                    ),
                   Text(
                     "Saved \$${goal.savedAmount.toStringAsFixed(0)} / \$${goal.targetAmount.toStringAsFixed(0)} (${(percent * 100).toStringAsFixed(0)}%)",
                     style: const TextStyle(fontSize: 13),

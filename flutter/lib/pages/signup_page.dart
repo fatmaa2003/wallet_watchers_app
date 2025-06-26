@@ -47,8 +47,16 @@ class _SignUpPageState extends State<SignUpPage> {
         );
 
         if (mounted) {
-          final user = User.fromJson(response['user']);
-          Navigator.pushReplacementNamed(context, '/home', arguments: user);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Registration successful!'),
+              backgroundColor: Colors.green[600],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          );
+          await Future.delayed(const Duration(milliseconds: 500));
+          Navigator.pushReplacementNamed(context, '/login');
         }
       } catch (e) {
         if (mounted) {
@@ -221,6 +229,15 @@ class _SignUpPageState extends State<SignUpPage> {
                       }
                       if (value.length < 6) {
                         return 'Password must be at least 6 characters';
+                      }
+                      if (!RegExp(r'.*[0-9].*').hasMatch(value)) {
+                        return 'Invalid data';
+                      }
+                      if (!RegExp(r'.*[A-Z].*').hasMatch(value)) {
+                        return 'Invalid data';
+                      }
+                      if (!RegExp(r'''.*[!@#\$%^&*(),.?":{}|<>\[\]~`_+=;'/\\-].*''').hasMatch(value)) {
+                        return 'Invalid data';
                       }
                       return null;
                     },

@@ -1,7 +1,7 @@
 const Income = require("../model/income.model");
 const User = require("../model/user.model");
 
-const postIncome = async ({ userId, incomeAmount, incomeName }) => {
+const postIncome = async ({ userId, incomeAmount, incomeName, date }) => {
   try {
     if (!userId) {
       console.log("userId not provided");
@@ -18,6 +18,7 @@ const postIncome = async ({ userId, incomeAmount, incomeName }) => {
       userId,
       incomeName,
       incomeAmount,
+      date: date || new Date(),
     });
 
     await newIncome.save();
@@ -43,7 +44,48 @@ const getIncome = async (userId) => {
   }
 };
 
+const updateIncome = async (userId, incomeName, incomeAmount) => {
+  try {
+    if (!userId || !incomeName) {
+      console.log("userId or incomeName not provided");
+      return null;
+    }
+
+    const updatedIncome = await Income.findOneAndUpdate(
+      { userId: userId, incomeName: incomeName },
+      { incomeAmount: incomeAmount },
+      { new: true }
+    );
+
+    return updatedIncome;
+  } catch (err) {
+    console.log("Error in updateIncome:", err);
+    return null;
+  }
+};
+
+const deleteIncome = async (userId, incomeName) => {
+  try {
+    if (!userId || !incomeName) {
+      console.log("userId or incomeName not provided");
+      return null;
+    }
+
+    const deletedIncome = await Income.findOneAndDelete({
+      userId: userId,
+      incomeName: incomeName,
+    });
+
+    return deletedIncome;
+  } catch (err) {
+    console.log("Error in deleteIncome:", err);
+    return null;
+  }
+};
+
 module.exports = {
   postIncome,
   getIncome,
+  updateIncome,
+  deleteIncome,
 };

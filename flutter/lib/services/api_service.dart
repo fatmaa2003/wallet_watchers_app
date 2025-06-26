@@ -79,10 +79,15 @@ class ApiService {
       final responseData = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final userId = responseData['user']?['id'];
+        final token = responseData['token'];
         if (userId == null || userId.isEmpty) {
           throw Exception('User ID missing in response');
         }
         await _saveUserId(userId);
+        if (token != null && token.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('authToken', token);
+        }
         return responseData;
       } else {
         throw Exception('Login failed: ${response.statusCode}');
@@ -172,6 +177,12 @@ class ApiService {
     }
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('authToken');
+      final headers = {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      };
       final payload = {
         'userId': _userId,
         'text': text.trim(),
@@ -181,10 +192,7 @@ class ApiService {
       final response = await http
           .post(
             Uri.parse('$baseUrl/receipts'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $_userId',
-            },
+            headers: headers,
             body: jsonEncode(payload),
           )
           .timeout(const Duration(seconds: 10));
@@ -258,8 +266,11 @@ class ApiService {
     return await updateGoal(goal.copyWith(isAchieved: !goal.isAchieved));
   }
 
-  Future<Map<String, dynamic>> addIncome(
-      {required double incomeAmount, required String incomeName}) async {
+  Future<Map<String, dynamic>> addIncome({
+    required double incomeAmount, 
+    required String incomeName,
+    DateTime? date,
+  }) async {
     if (_userId!.isEmpty) await _loadUserId();
     if (_userId!.isEmpty) {
       throw Exception('User ID not set. Please login first.');
@@ -271,24 +282,29 @@ class ApiService {
         'userId': _userId,
         'incomeAmount': incomeAmount,
         'incomeName': incomeName,
+        'date': date?.toIso8601String(),
       };
       print('Mock API: Income added successfully');
-      print('Response: \\${jsonEncode(mockResponse)}');
+      print('Response: ${jsonEncode(mockResponse)}');
       return mockResponse;
     }
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('authToken');
+      final headers = {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      };
       final response = await http
           .post(
             Uri.parse('$baseUrl/income/postIncome'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $_userId',
-            },
+            headers: headers,
             body: jsonEncode({
               'userId': _userId,
               'incomeAmount': incomeAmount,
               'incomeName': incomeName,
+              'date': date?.toIso8601String() ?? DateTime.now().toIso8601String(),
             }),
           )
           .timeout(const Duration(seconds: 10));
@@ -296,7 +312,7 @@ class ApiService {
       if (response.statusCode == 201) {
         return jsonDecode(response.body);
       } else {
-        throw Exception('Income failed: \\${response.statusCode}');
+        throw Exception('Income failed: ${response.statusCode}');
       }
     } catch (e) {
       print('Exception while adding income: $e');
@@ -487,11 +503,15 @@ class ApiService {
         print('accountNumber: $accountNumber');
       }
 
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('authToken');
+      final headers = {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      };
       final response = await http.post(
         Uri.parse('$baseUrl/expenses/postExpenses'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: jsonEncode({
           'userId': _userId,
           'expenseName': expenseName,
@@ -611,13 +631,16 @@ class ApiService {
     }
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('authToken');
+      final headers = {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      };
       final response = await http.delete(
         Uri.parse(
             '$baseUrl/expenses/deleteExpense?userId=$userId&expenseName=$expenseName'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $userId',
-        },
+        headers: headers,
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 200) {
@@ -654,6 +677,12 @@ class ApiService {
     }
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('authToken');
+      final headers = {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      };
       final expenseName = transaction.expenseName.trim().isNotEmpty
           ? transaction.expenseName
           : "Unnamed";
@@ -666,9 +695,7 @@ class ApiService {
       final response = await http
           .patch(
             Uri.parse('$baseUrl/expenses/updateExpense'),
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: headers,
             body: jsonEncode({
               'userId': _userId,
               'expenseName': expenseName,
@@ -790,6 +817,44 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Error deleting card: $e');
+    }
+  }
+
+  Future<void> updateIncome(String userId, Transaction income) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('authToken');
+    final headers = {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+    final response = await http.patch(
+      Uri.parse('$baseUrl/income/updateIncome'),
+      headers: headers,
+      body: jsonEncode({
+        'userId': userId,
+        'incomeName': income.expenseName,
+        'incomeAmount': income.amount,
+        'date': income.date.toIso8601String(),
+      }),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update income: [${response.statusCode}] - ${response.body}');
+    }
+  }
+
+  Future<void> deleteIncome(String userId, String incomeName) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('authToken');
+    final headers = {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+    final response = await http.delete(
+      Uri.parse('$baseUrl/income/deleteIncome?userId=$userId&incomeName=$incomeName'),
+      headers: headers,
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete income: [${response.statusCode}] - ${response.body}');
     }
   }
 }

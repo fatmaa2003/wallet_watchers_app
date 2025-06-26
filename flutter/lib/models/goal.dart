@@ -5,6 +5,7 @@ class Goal {
   final double targetAmount;
   final double savedAmount;
   final bool isAchieved;
+  final DateTime? targetDate;
 
   Goal({
     required this.id,
@@ -13,6 +14,7 @@ class Goal {
     required this.targetAmount,
     required this.savedAmount,
     required this.isAchieved,
+    this.targetDate,
   });
 
   factory Goal.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class Goal {
       targetAmount: (json['targetAmount'] ?? 0).toDouble(),
       savedAmount: (json['savedAmount'] ?? 0).toDouble(),
       isAchieved: json['isAchieved'] ?? false,
+      targetDate: json['targetDate'] != null ? DateTime.tryParse(json['targetDate']) : null,
     );
   }
 
@@ -33,6 +36,7 @@ class Goal {
       'targetAmount': targetAmount,
       'savedAmount': savedAmount,
       'isAchieved': isAchieved,
+      if (targetDate != null) 'targetDate': targetDate!.toIso8601String(),
     };
   }
 
@@ -42,6 +46,7 @@ class Goal {
     double? targetAmount,
     double? savedAmount,
     bool? isAchieved,
+    DateTime? targetDate,
   }) {
     return Goal(
       id: id,
@@ -50,6 +55,7 @@ class Goal {
       targetAmount: targetAmount ?? this.targetAmount,
       savedAmount: savedAmount ?? this.savedAmount,
       isAchieved: isAchieved ?? this.isAchieved,
+      targetDate: targetDate ?? this.targetDate,
     );
   }
 }
