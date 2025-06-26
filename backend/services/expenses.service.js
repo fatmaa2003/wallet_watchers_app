@@ -57,7 +57,12 @@ const deleteExpense = async (userId, expenseName) => {
   return await ExpensesRepository.deleteExpense(userId, expenseName);
 };
 
+const getCardExpenses = async (userId, cardNumber) => {
+  return await ExpensesRepository.getCardExpenses(userId, cardNumber);
+};
+
 module.exports = {
+  getCardExpenses,
   postAllExpenses,
   postExpenses,
   getExpensesByDate,

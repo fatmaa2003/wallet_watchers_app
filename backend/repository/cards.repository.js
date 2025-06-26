@@ -7,7 +7,7 @@ const postCard = async (userId, cardData) => {
       console.log("userId or cardData not provided");
       return null;
     }
-    const user = await userModel.findById( userId );
+    const user = await userModel.findById(userId);
 
     if (!user) {
       console.log("user not found");
@@ -35,7 +35,7 @@ const getCardsByUserId = async (userId) => {
       console.log("user id not provided");
       return [];
     }
-    const cards = await Cards.find( {userId} );
+    const cards = await Cards.find({ userId });
     return cards;
   } catch (err) {
     console.log("error in repo getcardsByUserId: ", err);
