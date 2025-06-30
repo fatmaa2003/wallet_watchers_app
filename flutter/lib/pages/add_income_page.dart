@@ -81,21 +81,21 @@ class _AddIncomePageState extends State<AddIncomePage> {
         }
       } else {
         // Add income
-        await widget.apiService.addIncome(
-          incomeAmount: _amount!,
-          incomeName: _description!,
+      await widget.apiService.addIncome(
+        incomeAmount: _amount!,
+        incomeName: _description!,
           date: _date!,
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Income added!'),
               backgroundColor: Colors.green[600],
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-          );
-          Navigator.pop(context, true);
+        );
+        Navigator.pop(context, true);
         }
       }
     } catch (e) {

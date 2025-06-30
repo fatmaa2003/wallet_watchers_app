@@ -244,7 +244,7 @@ class _BankPageState extends State<BankPage> {
     final cardNumber = card['cardNumber']?.toString() ?? '****-****-****-****';
     final cardHolder = card['cardHolder']?.toString().toUpperCase() ?? 'CARD HOLDER';
     final cardName = card['cardName']?.toString() ?? '';
-    
+
     // Format expiry date to MM/YY
     String formattedExpiryDate = 'MM/YY';
     if (card['expiryDate'] != null) {
@@ -424,160 +424,160 @@ class _BankPageState extends State<BankPage> {
           vertical: isTablet ? 12 : 8
         ),
         height: isTablet ? 240 : 200,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF1E3A8A), // Deep blue
-              const Color(0xFF3B82F6), // Bright blue
-              const Color(0xFF60A5FA), // Light blue
-            ],
-            stops: const [0.0, 0.5, 1.0],
-          ),
-          borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF3B82F6).withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF1E3A8A), // Deep blue
+            const Color(0xFF3B82F6), // Bright blue
+            const Color(0xFF60A5FA), // Light blue
           ],
+          stops: const [0.0, 0.5, 1.0],
         ),
-        child: Stack(
-          children: [
-            // Background Elements
-            Positioned(
+          borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF3B82F6).withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Background Elements
+          Positioned(
               right: isTablet ? -25 : -20,
               top: isTablet ? -25 : -20,
-              child: Container(
+            child: Container(
                 width: isTablet ? 180 : 150,
                 height: isTablet ? 180 : 150,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
-                ),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.1),
               ),
             ),
-            Positioned(
+          ),
+          Positioned(
               left: isTablet ? -35 : -30,
               bottom: isTablet ? -35 : -30,
-              child: Container(
+            child: Container(
                 width: isTablet ? 140 : 120,
                 height: isTablet ? 140 : 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
-                ),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.1),
               ),
             ),
-            // Card Content
-            Padding(
+          ),
+          // Card Content
+          Padding(
               padding: EdgeInsets.all(isTablet ? 24 : 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Top Row: Card Name and Chip
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      if (cardName.isNotEmpty)
-                        Text(
-                          cardName.toUpperCase(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top Row: Card Name and Chip
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (cardName.isNotEmpty)
+                      Text(
+                        cardName.toUpperCase(),
                           style: TextStyle(
-                            color: Colors.white70,
+                          color: Colors.white70,
                             fontSize: isTablet ? 16 : 14,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1,
-                          ),
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1,
                         ),
-                      Container(
+                      ),
+                    Container(
                         width: isTablet ? 48 : 40,
                         height: isTablet ? 36 : 30,
-                        decoration: BoxDecoration(
-                          color: Colors.amber[100],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.credit_card,
-                            color: Colors.amber[800],
+                      decoration: BoxDecoration(
+                        color: Colors.amber[100],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.credit_card,
+                          color: Colors.amber[800],
                             size: isTablet ? 24 : 20,
-                          ),
                         ),
                       ),
-                    ],
-                  ),
-                  const Spacer(),
-                  // Card Number
-                  Text(
-                    '•••• •••• •••• ${cardNumber.split('-').last}',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: isTablet ? 24 : 20,
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Roboto',
                     ),
+                  ],
+                ),
+                const Spacer(),
+                // Card Number
+                Text(
+                  '•••• •••• •••• ${cardNumber.split('-').last}',
+                    style: TextStyle(
+                    color: Colors.white,
+                      fontSize: isTablet ? 24 : 20,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Roboto',
                   ),
-                  const Spacer(),
-                  // Bottom Row: Card Holder and Expiry
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Card Holder
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            cardHolder,
+                ),
+                const Spacer(),
+                // Bottom Row: Card Holder and Expiry
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Card Holder
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          cardHolder,
                             style: TextStyle(
-                              color: Colors.white,
+                            color: Colors.white,
                               fontSize: isTablet ? 16 : 14,
-                              letterSpacing: 0.5,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            letterSpacing: 0.5,
+                            fontWeight: FontWeight.w500,
                           ),
-                        ],
-                      ),
-                      // Expiry Date
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
+                        ),
+                      ],
+                    ),
+                    // Expiry Date
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
                           Text(
-                            'EXPIRES',
-                            style: TextStyle(
-                              color: Colors.white70,
+                          'EXPIRES',
+                          style: TextStyle(
+                            color: Colors.white70,
                               fontSize: isTablet ? 12 : 10,
-                              letterSpacing: 1,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            letterSpacing: 1,
+                            fontWeight: FontWeight.w600,
                           ),
+                        ),
                           SizedBox(height: isTablet ? 6 : 4),
-                          Text(
+                        Text(
                             formattedExpiryDate,
                             style: TextStyle(
-                              color: Colors.white,
+                            color: Colors.white,
                               fontSize: isTablet ? 16 : 14,
-                              letterSpacing: 0.5,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            letterSpacing: 0.5,
+                            fontWeight: FontWeight.w500,
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
-            // Delete Button
-            Positioned(
+          ),
+          // Delete Button
+          Positioned(
               top: isTablet ? 12 : 8,
               right: isTablet ? 12 : 8,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () async {
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () async {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
@@ -596,43 +596,43 @@ class _BankPageState extends State<BankPage> {
                       ),
                     );
                     if (confirm == true) {
-                      try {
-                        await _apiService.deleteCard(widget.user.id, cardName);
-                        _loadCards();
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                  try {
+                    await _apiService.deleteCard(widget.user.id, cardName);
+                    _loadCards();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: const Text('Card deleted successfully'),
                               backgroundColor: Colors.green[600],
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
-                          );
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('Error deleting card: $e'),
                               backgroundColor: Colors.red[600],
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
-                          );
+                      );
                         }
-                      }
                     }
-                  },
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
+                  }
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
                     padding: EdgeInsets.all(isTablet ? 10 : 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                     child: Icon(
-                      Icons.delete_outline,
-                      color: Colors.white70,
+                    Icons.delete_outline,
+                    color: Colors.white70,
                       size: isTablet ? 22 : 18,
                     ),
                   ),
@@ -640,7 +640,7 @@ class _BankPageState extends State<BankPage> {
               ),
             ),
           ],
-        ),
+          ),
       ),
     );
   }

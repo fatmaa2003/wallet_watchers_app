@@ -133,17 +133,17 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
                         if (direction == DismissDirection.startToEnd) {
                           // Swipe right - Edit
                           if (transaction.type == TransactionType.expense) {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AddExpensePage(
-                                  apiService: _apiService,
-                                  initialExpense: transaction,
-                                ),
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddExpensePage(
+                                apiService: _apiService,
+                                initialExpense: transaction,
                               ),
-                            );
-                            if (result == true) {
-                              await _loadTransactions();
+                            ),
+                          );
+                          if (result == true) {
+                            await _loadTransactions();
                             }
                           } else {
                             final result = await Navigator.push(
@@ -180,35 +180,35 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
                             ),
                           );
                           if (confirm == true) {
-                            try {
+                          try {
                               if (transaction.type == TransactionType.expense) {
-                                await _apiService.deleteExpense(widget.user.id, transaction.expenseName);
+                            await _apiService.deleteExpense(widget.user.id, transaction.expenseName);
                               } else {
                                 await _apiService.deleteIncome(widget.user.id, transaction.expenseName);
                               }
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(transaction.type == TransactionType.expense ? 'Expense deleted successfully' : 'Income deleted successfully'),
                                     backgroundColor: Colors.green[600],
                                     behavior: SnackBarBehavior.floating,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                   ),
-                                );
-                                await _loadTransactions();
-                              }
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
+                              );
+                              await _loadTransactions();
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text('Error deleting ${transaction.type == TransactionType.expense ? 'expense' : 'income'}: $e'),
                                     backgroundColor: Colors.red[600],
                                     behavior: SnackBarBehavior.floating,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                   ),
-                                );
-                              }
+                              );
                             }
+                          }
                           }
                           return false;
                         }
@@ -218,40 +218,40 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeInOut,
-                          margin: const EdgeInsets.only(bottom: 16.0),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey[200]!,
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Row(
-                              children: [
+                        margin: const EdgeInsets.only(bottom: 16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey[200]!,
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
                                 // Icon Container
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        transaction.color.withOpacity(0.2),
-                                        transaction.color.withOpacity(0.1)
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          transaction.color.withOpacity(0.2),
+                                          transaction.color.withOpacity(0.1)
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      shape: BoxShape.circle,
                                     ),
-                                    shape: BoxShape.circle,
+                                    child: Icon(transaction.icon, color: transaction.color),
                                   ),
-                                  child: Icon(transaction.icon, color: transaction.color),
-                                ),
-                                const SizedBox(width: 16),
+                                  const SizedBox(width: 16),
                                 
                                 // Transaction Details - Flexible
                                 Expanded(
@@ -325,44 +325,44 @@ class _AllTransactionsPageState extends State<AllTransactionsPage> {
                                 SizedBox(
                                   width: 100,
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                     mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        '${transaction.type == TransactionType.income ? '+' : '-'}\$${transaction.amount.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: transaction.color,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                children: [
+                                  Text(
+                                    '${transaction.type == TransactionType.income ? '+' : '-'}\$${transaction.amount.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: transaction.color,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: transaction.color.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      transaction.category.categoryName.toUpperCase(),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: transaction.color,
+                                        fontWeight: FontWeight.w500,
                                       ),
-                                      const SizedBox(height: 4),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: transaction.color.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          transaction.category.categoryName.toUpperCase(),
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: transaction.color,
-                                            fontWeight: FontWeight.w500,
-                                          ),
                                           overflow: TextOverflow.ellipsis,
                                           maxLines: 1,
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                                  ),
+                              ),
+                            ],
                             ),
                           ),
                         ),

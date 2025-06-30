@@ -38,37 +38,37 @@ class _GoalsPageState extends State<GoalsPage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          backgroundColor: Colors.blue[50],
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Add Goal'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Goal Title',
-                    border: OutlineInputBorder(),
-                  ),
+        backgroundColor: Colors.blue[50],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Add Goal'),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Goal Title',
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: savedController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Saved Amount',
-                    border: OutlineInputBorder(),
-                  ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: savedController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Saved Amount',
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: targetController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Target Amount',
-                    border: OutlineInputBorder(),
-                  ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: targetController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Target Amount',
+                  border: OutlineInputBorder(),
                 ),
+              ),
                 const SizedBox(height: 10),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -91,50 +91,50 @@ class _GoalsPageState extends State<GoalsPage> {
                     },
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.flag),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.lightBlueAccent,
             ),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.flag),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlueAccent,
-              ),
-              onPressed: () async {
-                final goal = Goal(
-                  id: '',
-                  title: titleController.text.trim(),
-                  icon: 'flag',
-                  savedAmount: double.tryParse(savedController.text.trim()) ?? 0,
-                  targetAmount:
-                      double.tryParse(targetController.text.trim()) ?? 0,
-                  isAchieved: false,
+            onPressed: () async {
+              final goal = Goal(
+                id: '',
+                title: titleController.text.trim(),
+                icon: 'flag',
+                savedAmount: double.tryParse(savedController.text.trim()) ?? 0,
+                targetAmount:
+                    double.tryParse(targetController.text.trim()) ?? 0,
+                isAchieved: false,
                   targetDate: _selectedTargetDate,
-                );
+              );
 
-                try {
-                  await _apiService.createGoal(goal);
-                  _refreshGoals();
-                  Navigator.of(context).pop();
-                } catch (e) {
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
+              try {
+                await _apiService.createGoal(goal);
+                _refreshGoals();
+                Navigator.of(context).pop();
+              } catch (e) {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Failed to create goal: $e'),
                       backgroundColor: Colors.red[600],
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                  );
-                }
-              },
-              label: const Text('Add'),
-            ),
-          ],
+                );
+              }
+            },
+            label: const Text('Add'),
+          ),
+        ],
         ),
       ),
     );
@@ -298,26 +298,26 @@ class _GoalsPageState extends State<GoalsPage> {
           return Padding(
             padding: const EdgeInsets.only(bottom: 80.0),
             child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                if (activeGoals.isNotEmpty) ...[
-                  const Text(
-                    "Active Goals",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  ...activeGoals.map((goal) => _buildGoalCard(goal)).toList(),
-                ],
-                if (achievedGoals.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Achieved Goals",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  ...achievedGoals.map((goal) => _buildGoalCard(goal)).toList(),
-                ],
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (activeGoals.isNotEmpty) ...[
+                const Text(
+                  "Active Goals",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                ...activeGoals.map((goal) => _buildGoalCard(goal)).toList(),
               ],
+              if (achievedGoals.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                const Text(
+                  "Achieved Goals",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                ...achievedGoals.map((goal) => _buildGoalCard(goal)).toList(),
+              ],
+            ],
             ),
           );
         },

@@ -5,7 +5,6 @@ import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
 import 'package:wallet_watchers_app/models/category.dart';
 import 'package:wallet_watchers_app/providers/categories_provider.dart';
-import 'package:wallet_watchers_app/pages/ReceiptScanPage.dart';
 
 class AddExpensePage extends StatefulWidget {
   final ApiService apiService;
@@ -321,58 +320,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
                       ),
                     ),
                     SizedBox(height: isTablet ? 50 : 40),
-
-                    // Receipt Scanning Button (only show when adding new expense)
-                    if (widget.initialExpense == null) ...[
-                      Container(
-                        width: double.infinity,
-                        height: isTablet ? 64 : 56,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey[200]!,
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ReceiptScanPage(),
-                              ),
-                            );
-                          },
-                          icon: Icon(
-                            Icons.document_scanner,
-                            size: isTablet ? 24 : 20,
-                            color: Colors.blue[600],
-                          ),
-                          label: Text(
-                            'Scan Receipt',
-                            style: TextStyle(
-                              fontSize: isTablet ? 18 : 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.blue[600],
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.blue[600],
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
-                              side: BorderSide(color: Colors.blue[200]!, width: 1),
-                            ),
-                            elevation: 0,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: isTablet ? 24 : 20),
-                    ],
 
                     // Submit Button
                     SizedBox(
